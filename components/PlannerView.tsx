@@ -6,6 +6,20 @@ const YEAR_LEVELS = ["Pre-Primary", "Year 1", "Year 2", "Year 3", "Year 4", "Yea
 const LESSON_TYPES = ["Explicit Teaching", "Inquiry-Based", "Guided Practice", "Independent Task", "Flipped Classroom"];
 const DURATIONS = [30, 45, 50, 60, 70, 90];
 
+function logFeedback(type: string, quality: "good" | "bad", context: string) {
+  const key = `pn-feedback-${type}`;
+  const existing = JSON.parse(localStorage.getItem(key) || "[]");
+  existing.push({ quality, context, ts: Date.now() });
+  localStorage.setItem(key, JSON.stringify(existing.slice(-50))); // keep last 50
+}
+
+function logUsage(type: string, action: string, context: string) {
+  const key = `pn-usage`;
+  const existing = JSON.parse(localStorage.getItem(key) || "[]");
+  existing.push({ type, action, context, ts: Date.now() });
+  localStorage.setItem(key, JSON.stringify(existing.slice(-100)));
+}
+
 export default function PlannerView() {
   const [subject, setSubject] = useState("Mathematics");
   const [yearLevel, setYearLevel] = useState("Year 4");
@@ -16,10 +30,11 @@ export default function PlannerView() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState("");
+  const [feedback, setFeedback] = useState<"good" | "bad" | null>(null);
 
   async function generate() {
     if (!topic.trim()) { setError("Please enter a topic"); return; }
-    setError(""); setLoading(true); setResult("");
+    setError(""); setLoading(true); setResult(""); setFeedback(null);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -27,19 +42,27 @@ export default function PlannerView() {
         body: JSON.stringify({ subject, yearLevel, topic, duration, lessonType, objectives }),
       });
       const data = await res.json();
-      if (data.plan) setResult(data.plan);
-      else if (data.error) setError(data.error);
+      if (data.plan) {
+        setResult(data.plan);
+        logUsage("lesson-plan", "generate", `${subject} ${yearLevel} ${topic}`);
+      } else if (data.error) setError(data.error);
     } catch { setError("Generation failed. Please try again."); }
     finally { setLoading(false); }
   }
 
   function download() {
     if (!result) return;
+    logUsage("lesson-plan", "export", `${subject} ${yearLevel} ${topic}`);
     const blob = new Blob([result], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url;
     a.download = `LessonPlan_${subject}_${yearLevel}_${topic.slice(0, 20)}.txt`; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  function handleFeedback(f: "good" | "bad") {
+    setFeedback(f);
+    logFeedback("lesson-plan", f, `${subject} ${yearLevel} ${topic}`);
   }
 
   return (
@@ -100,10 +123,25 @@ export default function PlannerView() {
         </div>
 
         {/* Result */}
-        <div style={{ padding: "24px 28px" }}>
+        <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700 }}>Generated Lesson Plan</h2>
-            {result && <button onClick={download} style={{ padding: "7px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, color: "var(--text2)", cursor: "pointer" }}>Download</button>}
+            {result && (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {feedback === null ? (
+                  <>
+                    <span style={{ fontSize: 12, color: "var(--text3)", marginRight: 4 }}>Was this helpful?</span>
+                    <button onClick={() => handleFeedback("good")} title="Good" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16 }}>👍</button>
+                    <button onClick={() => handleFeedback("bad")} title="Needs improvement" style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontSize: 16 }}>👎</button>
+                  </>
+                ) : (
+                  <span style={{ fontSize: 12, color: feedback === "good" ? "var(--success)" : "var(--danger)", fontWeight: 600 }}>
+                    {feedback === "good" ? "✓ Thanks! We'll keep doing this" : "✓ Thanks — we'll improve this"}
+                  </span>
+                )}
+                <button onClick={download} style={{ padding: "7px 14px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, color: "var(--text2)", cursor: "pointer", marginLeft: 8 }}>Download</button>
+              </div>
+            )}
           </div>
           <div style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 14, padding: "1.25rem", overflowY: "auto", fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap", color: result ? "var(--text)" : "var(--text3)" }}>
             {result || "Your lesson plan will appear here after generation."}
