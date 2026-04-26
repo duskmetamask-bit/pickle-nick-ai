@@ -86,7 +86,13 @@ export default function LibraryView() {
       const res = await fetch("/api/export/lesson/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: lesson.content, title: lesson.title }),
+        body: JSON.stringify({
+          content: lesson.content,
+          title: lesson.title,
+          week: lesson.week,
+          subject: selected?.subject,
+          yearLevel: selected?.yearLevel,
+        }),
       });
       if (!res.ok) throw new Error();
       const blob = await res.blob();
