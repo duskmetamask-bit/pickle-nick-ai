@@ -196,9 +196,25 @@ export default function LibraryView() {
         {/* Unit list */}
         <div style={{ borderRight: "1px solid var(--border)", overflowY: "auto" }}>
           {loading ? (
-            <div style={{ padding: 40, textAlign: "center", color: "var(--text2)" }}>Loading...</div>
+            <div style={{ padding: 24 }}>
+              {[1,2,3,4,5].map(i => (
+                <div key={i} style={{ padding: "12px 15px", borderBottom: "1px solid var(--border)" }}>
+                  <div style={{ height: 14, background: "var(--surface2)", borderRadius: 6, marginBottom: 8, width: "85%" }} />
+                  <div style={{ height: 10, background: "var(--surface2)", borderRadius: 6, width: "45%" }} />
+                </div>
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: 40, textAlign: "center", color: "var(--text2)" }}>No units match.</div>
+            <div style={{ padding: 60, textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, color: "var(--text2)" }}>No units found</div>
+              <div style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16 }}>
+                {search || subject || year ? "Try different filters or clear your search" : "No units are available yet"}
+              </div>
+              {(search || subject || year) && (
+                <button onClick={() => { setSearch(""); setSubject(""); setYear(""); }} style={{ padding: "8px 16px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, fontSize: 13, color: "var(--text2)", cursor: "pointer" }}>Clear filters</button>
+              )}
+            </div>
           ) : (
             filtered.map(u => (
               <div

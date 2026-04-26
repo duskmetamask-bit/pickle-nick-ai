@@ -7,36 +7,6 @@ interface ChatMessage {
   content: string;
 }
 
-async function chatWithAI(messages: ChatMessage[]): Promise<string> {
-  if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder") {
-    // Demo mode — return a helpful placeholder
-    const lastMsg = messages[messages.length - 1]?.content || "";
-    return `I'm ready to help with your teaching question about "${lastMsg.slice(0, 50)}..."\n\n**To enable full AI responses:**\n1. Get an OpenAI API key from https://platform.openai.com/api-keys\n2. Add it to the \`.env\` file: \`OPENAI_API_KEY=sk-...\`\n3. Restart the server with \`pm2 restart pickle-nick\`\n\nIn the meantime, I can help with:\n- Lesson planning (tell me year level, subject, topic)\n- Assessment design (rubrics, success criteria)\n- Behaviour strategies\n- Differentiation approaches\n- Australian Curriculum (AC9) codes`;
-  }
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
-      temperature: 0.7,
-      max_tokens: 2000,
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenAI error: ${response.status} — ${err}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0]?.message?.content || "No response received.";
-}
-
 function buildSystemPrompt(profile: { name: string; yearLevels: string[]; subjects: string[] }): string {
   return `You are PickleNickAI — expert Australian F-6 teaching assistant with full AC9 knowledge. You follow the JOHN BUTLER PRIMARY COLLEGE INSTRUCTIONAL MODEL for explicit, evidence-based teaching.
 
@@ -119,12 +89,102 @@ export async function POST(req: NextRequest) {
 
     const allMessages: ChatMessage[] = [systemPrompt, ...messages];
 
-    const reply = await chatWithAI(allMessages);
-    return NextResponse.json({ reply });
+    // Demo mode — no real API key
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder") {
+      const lastMsg = allMessages[allMessages.length - 1]?.content || "";
+      const demoText = `I'm ready to help with your teaching question about "${lastMsg.slice(0, 50)}..."\n\n**To enable full AI responses:**\n1. Get an OpenAI API key from https://platform.openai.com/api-keys\n2. Add it to the \`.env\` file: \`OPENAI_API_KEY=sk-...\`\n3. Restart the server with \`pm2 restart pickle-nick\`\n\nIn the meantime, I can help with:\n- Lesson planning (tell me year level, subject, topic)\n- Assessment design (rubrics, success criteria)\n- Behaviour strategies\n- Differentiation approaches\n- Australian Curriculum (AC9) codes`;
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          const encoder = new TextEncoder();
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", content: demoText })}\n\n`));
+          controller.close();
+        }
+      });
+      return new Response(stream, {
+        headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
+      });
+    }
+
+    // Real streaming response from OpenAI
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: allMessages.map(m => ({ role: m.role, content: m.content })),
+        temperature: 0.7,
+        max_tokens: 2000,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`OpenAI error: ${response.status} — ${err}`);
+    }
+
+    if (!response.body) {
+      throw new Error("No response body from OpenAI");
+    }
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        const encoder = new TextEncoder();
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+                } else {
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.choices?.[0]?.delta?.content;
+                    if (content) {
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", content })}\n\n`));
+                    }
+                  } catch {}
+                }
+              }
+            }
+          }
+          controller.close();
+        } catch (streamErr) {
+          controller.error(streamErr);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive" },
+    });
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Chat failed";
     console.error("[chat/route]", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", content: message })}\n\n`));
+        controller.close();
+      }
+    });
+    return new Response(stream, {
+      headers: { "Content-Type": "text/event-stream" },
+    });
   }
 }
