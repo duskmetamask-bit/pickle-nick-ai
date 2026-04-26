@@ -11,6 +11,44 @@ const QUICK_PROMPTS = [
   "Explain AC9 codes...",
 ];
 
+function isStructuredContent(content: string): boolean {
+  const indicators = ["WALT", "TIB", "WILF", "Lesson Plan", "Assessment", "Rubric", "Learning Intention", "Success Criteria", "AC9", "Hot Task", "Cold Task", "Exit Ticket", "Phase | Duration"];
+  return indicators.some(ind => content.includes(ind));
+}
+
+function getContentType(content: string): string {
+  if (content.includes("WALT") || content.includes("Lesson Plan")) return "lesson";
+  if (content.includes("Rubric") || content.includes("Excellent") && content.includes("Satisfactory")) return "rubric";
+  if (content.includes("Cold Task") || content.includes("Hot Task") || content.includes("Assessment")) return "assessment";
+  return "other";
+}
+
+function downloadTxt(content: string, label: string) {
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url;
+  a.download = `${label}_${new Date().toISOString().slice(0, 10)}.txt`; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadPdf(content: string, label: string) {
+  try {
+    const res = await fetch("/api/export/chat-to-pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, label }),
+    });
+    if (!res.ok) throw new Error("PDF generation failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `${label}_${new Date().toISOString().slice(0, 10)}.pdf`; a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    alert("PDF export failed — try downloading as text instead");
+  }
+}
+
 export default function ChatView({ profile }: { profile: Profile }) {
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
@@ -50,6 +88,12 @@ export default function ChatView({ profile }: { profile: Profile }) {
     finally { setLoading(false); }
   }
 
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      // brief visual feedback could be added here
+    });
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
       {/* Header */}
@@ -66,18 +110,52 @@ export default function ChatView({ profile }: { profile: Profile }) {
 
       {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px", display: "flex", flexDirection: "column", gap: 16 }}>
-        {messages.map((msg, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start" }}>
-            {msg.role === "assistant" && (
-              <div style={{ background: "linear-gradient(135deg, #6366f1, #22d3ee)", width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#fff", flexShrink: 0, marginRight: 10 }}>
-                PN
+        {messages.map((msg, i) => {
+          const isStructured = msg.role === "assistant" && isStructuredContent(msg.content);
+          const contentType = isStructured ? getContentType(msg.content) : null;
+
+          return (
+            <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", alignItems: "flex-start" }}>
+              {msg.role === "assistant" && (
+                <div style={{ background: "linear-gradient(135deg, #6366f1, #22d3ee)", width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#fff", flexShrink: 0, marginRight: 10, marginTop: 4 }}>
+                  PN
+                </div>
+              )}
+              <div style={{ maxWidth: "78%" }}>
+                <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "var(--primary)" : "var(--surface2)", color: msg.role === "user" ? "#fff" : "var(--text)", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                  {msg.content}
+                </div>
+
+                {/* Export actions for structured content */}
+                {isStructured && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                    <button
+                      onClick={() => downloadTxt(msg.content, contentType || "content")}
+                      style={{ padding: "6px 12px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, color: "var(--text2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
+                      title="Download as text file"
+                    >
+                      📄 TXT
+                    </button>
+                    <button
+                      onClick={() => downloadPdf(msg.content, contentType || "content")}
+                      style={{ padding: "6px 12px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, color: "var(--text2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
+                      title="Download as PDF"
+                    >
+                      📕 PDF
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(msg.content)}
+                      style={{ padding: "6px 12px", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, color: "var(--text2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
+                      title="Copy to clipboard"
+                    >
+                      📋 Copy
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-            <div style={{ maxWidth: "75%", padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "var(--primary)" : "var(--surface2)", color: msg.role === "user" ? "#fff" : "var(--text)", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-              {msg.content}
             </div>
-          </div>
-        ))}
+          );
+        })}
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: 10 }}>
             <div style={{ background: "linear-gradient(135deg, #6366f1, #22d3ee)", width: 30, height: 30, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12, color: "#fff" }}>PN</div>
