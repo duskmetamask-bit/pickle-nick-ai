@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Onboarding from "@/components/Onboarding";
 import Sidebar from "@/components/Sidebar";
 import ChatView from "@/components/ChatView";
 import LibraryView from "@/components/LibraryView";
 import PlannerView from "@/components/PlannerView";
-import WorkflowsView from "@/components/WorkflowsView";
 import RubricView from "@/components/RubricView";
 import AutoMarkView from "@/components/AutoMarkView";
 import CurriculumView from "@/components/CurriculumView";
@@ -20,20 +19,22 @@ interface TeacherProfile {
   school?: string;
 }
 
-type Tab = "chat" | "library" | "workflows" | "planner" | "rubric" | "automark" | "curriculum" | "profile";
+type Tab = "chat" | "library" | "planner" | "rubric" | "automark" | "curriculum" | "profile";
 
-export default function PickleNickAIPage() {
+export default function PickleNickAIApp() {
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("chat");
 
-  useEffect(() => {
-    const saved = localStorage.getItem("pn-profile");
-    if (saved) {
-      try { setProfile(JSON.parse(saved)); } catch {}
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pn-profile");
+      if (saved) {
+        try { setProfile(JSON.parse(saved)); } catch {}
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  });
 
   function handleOnboardingComplete(p: TeacherProfile) {
     localStorage.setItem("pn-profile", JSON.stringify(p));
@@ -42,15 +43,19 @@ export default function PickleNickAIPage() {
 
   if (loading) {
     return (
-      <div style={{ background: "var(--bg)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ textAlign: "center" }}>
+      <div style={{
+        background: "var(--bg)", minHeight: "100vh",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
           <div style={{
-            background: "linear-gradient(135deg, #6366f1, #22d3ee)",
-            width: 56, height: 56, borderRadius: 16,
+            width: 48, height: 48, borderRadius: 14,
+            background: "linear-gradient(135deg, #6366f1, #818cf8)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 16px", fontWeight: 900, fontSize: 18, color: "#fff",
+            fontWeight: 900, fontSize: 16, color: "#fff",
+            boxShadow: "0 0 30px rgba(99,102,241,0.4)",
           }}>PN</div>
-          <p style={{ color: "var(--text2)", fontSize: 14 }}>Loading PickleNickAI...</p>
+          <p style={{ color: "var(--text-2)", fontSize: 14 }}>Loading PickleNickAI...</p>
         </div>
       </div>
     );
@@ -63,9 +68,14 @@ export default function PickleNickAIPage() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
       <Sidebar activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} profile={profile} />
-      <main style={{ flex: 1, marginLeft: 240, overflowY: "auto" }}>
+      <main style={{
+        flex: 1,
+        marginLeft: 220,
+        minHeight: "100vh",
+        overflowY: "auto",
+      }}>
         {activeTab === "chat" && <ChatView profile={profile} />}
-        {activeTab === "workflows" && <WorkflowsView />}
+        {activeTab === "library" && <LibraryView />}
         {activeTab === "planner" && <PlannerView />}
         {activeTab === "rubric" && <RubricView />}
         {activeTab === "automark" && <AutoMarkView />}
