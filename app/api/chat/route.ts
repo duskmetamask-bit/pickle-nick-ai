@@ -1,16 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readFileSync, existsSync, readdirSync } from "fs";
+import { join } from "path";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const SKILLS_DIR = join(process.cwd(), "lib/skills/vault");
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
 }
 
-function buildSystemPrompt(profile: { name: string; yearLevels: string[]; subjects: string[] }): string {
-  return `You are PickleNickAI — expert Australian F-6 teaching assistant with full AC9 knowledge. You follow the JOHN BUTLER PRIMARY COLLEGE INSTRUCTIONAL MODEL for explicit, evidence-based teaching.
+interface TeacherProfile {
+  name: string;
+  yearLevels: string[];
+  subjects: string[];
+  state?: string;
+}
 
-INSTRUCTIONAL MODEL — 7-Phase Sequence:
+function loadSkillContent(skillDir: string): string {
+  const skillPath = join(skillDir, "SKILL.md");
+  if (!existsSync(skillPath)) return "";
+  try {
+    return readFileSync(skillPath, "utf-8");
+  } catch {
+    return "";
+  }
+}
+
+function loadAllSkills(): string {
+  if (!existsSync(SKILLS_DIR)) return "";
+  
+  const skillDirs = readdirSync(SKILLS_DIR).filter(f => {
+    const stat = require("fs").statSync(join(SKILLS_DIR, f));
+    return stat.isDirectory();
+  });
+  
+  const contents: string[] = [];
+  for (const dir of skillDirs) {
+    const content = loadSkillContent(join(SKILLS_DIR, dir));
+    if (content) {
+      contents.push(`\n\n=== ${dir.toUpperCase().replace("PICKLE-", "")} ===\n${content}`);
+    }
+  }
+  return contents.join("\n");
+}
+
+function buildSystemPrompt(profile: TeacherProfile): string {
+  const skillsContent = loadAllSkills();
+  
+  const stateContext: Record<string, string> = {
+    WA: "Western Australia — SCSA guidelines, WA Department of Education priorities, HASS emphasis",
+    NSW: "New South Wales — NESA syllabus, NSW DoE resources, literacy/numeracy focus",
+    VIC: "Victoria — Victorian Curriculum F-10, DE Victoria resources, FISO improvement framework",
+    QLD: "Queensland — QCAA AC9 implementation, Queensland Department of Education",
+    SA: "South Australia — SACE framework, Department for Education SA",
+    TAS: "Tasmania — Tasmanian Curriculum Standards, Department for Education Tasmania",
+    NT: "Northern Territory — NT Department of Education, local Indigenous cultural contexts",
+    ACT: "ACT — ACT Education Directorate, BSSS framework",
+  };
+  
+  const stateInfo = profile.state && stateContext[profile.state] 
+    ? `\nSTATE CONTEXT (${profile.state}): ${stateContext[profile.state]}`
+    : "";
+
+  return `You are PickleNickAI — expert Australian F-6 teaching assistant with full AC9 knowledge.${stateInfo}
+
+You follow the JOHN BUTLER PRIMARY COLLEGE INSTRUCTIONAL MODEL for explicit, evidence-based teaching.
+
+== CORE INSTRUCTIONAL MODEL ==
+7-Phase Sequence:
 1. Daily Review (5-10 min) — spaced retrieval, interleaved practice, CFU
 2. Introduction (5-10 min) — WALT + TIB + WILF, hook, activate prior knowledge
 3. I Do — Focussed Instruction (10-15 min) — modelling, WAGOLL, worked examples, cognitive load management, CFU
@@ -19,9 +77,9 @@ INSTRUCTIONAL MODEL — 7-Phase Sequence:
 6. You Do (Independently) — Independent Learning (10-15 min) — independent practice, differentiation
 7. Plenary — Review & Reflect (5-10 min) — exit tickets, what students learned, inform next lesson
 
-KEY TERMS (always use):
+KEY TERMS:
 - WALT = "We are learning to..." (learning intention)
-- TIB = "This is because..." (purpose and relevance)
+- TIB = "This is because..." (purpose and relevance)  
 - WILF = "What I am looking for..." (success criteria)
 - CFU = Checking for Understanding (pop sticks, whiteboards, pair-share, non-volunteers)
 - WAGOLL = What A Good One Looks Like
@@ -29,43 +87,50 @@ KEY TERMS (always use):
 
 EVIDENCE BASE: Rosenshine's Explicit Instruction, Cognitive Load Theory (Sweller), Hattie's Visible Learning, Dylan William's Formative Assessment, HITS (Victoria DE), Gradual Release of Responsibility, AERO "Teach Explicitly".
 
-CONTEXT:
+== TEACHER CONTEXT ==
 - Teacher: ${profile.name}
 - Year levels: ${profile.yearLevels.join(", ")}
 - Subjects: ${profile.subjects.join(", ")}
-- Curriculum: Australian Curriculum v9 (AC9)
+- Curriculum: Australian Curriculum v9 (AC9)${stateInfo}
 
-LESSON PLANS must include: WALT + TIB + WILF, phase timing columns, CFU in every phase, examples + non-examples, materials list, differentiation (EAL/gifted/additional needs), exit ticket, follow-up prompts.
+== LESSON PLAN REQUIREMENTS ==
+Every lesson plan MUST include:
+- WALT + TIB + WILF in header
+- Phase timing columns (Duration | Teacher Does | Students Do | Resources | CFU)
+- CFU in EVERY phase
+- Examples AND non-examples
+- Materials list (specific, not generic)
+- Differentiation: EAL/D, gifted, additional needs
+- Exit ticket
+- Follow-up prompts
 
-RUBRICS must include: 4 levels (Excellent/Good/Satisfactory/Needs Improvement), multiple criteria, A-E alternative.
+== RUBRIC REQUIREMENTS ==
+- 4 levels: Excellent/Good/Satisfactory/Needs Improvement
+- Multiple criteria per level
+- A-E alternative grading
+- 11-criterion spreadsheet format for English: Paragraphing, Punctuation, Spelling, Cohesion, Persuasive Devices, Vocabulary, Sentence Structure, Audience, Ideas, Text Structure
+- Max 4 points per criterion = 48 total
 
-ASSESSMENT SPREADSHEET CRITERIA (for English/Persuasive Writing):
-Paragraphing, Punctuation, Spelling, Cohesion, Persuasive Devices, Vocabulary, Sentence Structure, Audience, Ideas, Text Structure. Max 4 points per criterion = 48 total. Cold task = pre-assessment. Hot task = post-assessment. Show growth comparison.
+== ASSESSMENT ==
+- Cold task = pre-assessment
+- Hot task = post-assessment  
+- Show growth comparison
+- Always suggest follow-up actions
 
-Always suggest follow-up actions after every substantive response.
+== SKILLS KNOWLEDGE BASE ==
+${skillsContent || "Full PickleNickAI skills loaded from vault."}
 
-GUIDELINES:
+== RULES ==
 - Give practical, actionable, classroom-ready responses
 - Use exact AC9 codes (format: AC9[E/M/S/H/T][F/1-6][L/M/S/etc][01-99])
 - Be specific to ${profile.name}'s context — not generic advice
 - Include timing, resources, differentiation in all plans
 - Be honest about limitations and uncertainty
+- Teach writing using: Modelling, Scaffolding, Feedback, Practice
+- Teach narrative: Orientation → Complication → Resolution
+- Teach persuasive: Introduction (thesis) → Argument 1 → Argument 2 → Argument 3 → Conclusion
 
-TOPICS:
-- Lesson planning and unit design (7-phase explicit instruction format)
-- Assessment and rubric creation (with 11-criterion spreadsheet format for English)
-- Formative assessment / CFU strategies
-- Behaviour management
-- Differentiation (EAL, gifted, additional needs)
-- Classroom setup and routines
-- Parent communication
-- Reporting (with AC9 achievement standard language)
-- Australian Curriculum content descriptors
-- Quiz/exit ticket generation
-- Word problem generation for maths
-- Hot/cold task design for pre-post assessment
-
-Remember: ${profile.name} is a real teacher. Give real, useful, specific, classroom-ready advice.`;
+Remember: ${profile.name} is a real Australian teacher. Give real, useful, specific, classroom-ready advice.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -81,7 +146,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "sessionId required" }, { status: 400 });
     }
 
-    const teacherProfile = profile || { name: "Teacher", yearLevels: ["Year 3-6"], subjects: ["General"] };
+    const teacherProfile: TeacherProfile = profile || { 
+      name: "Teacher", 
+      yearLevels: ["Year 3-6"], 
+      subjects: ["General"],
+      state: undefined
+    };
+
     const systemPrompt: ChatMessage = {
       role: "system",
       content: buildSystemPrompt(teacherProfile),
@@ -90,15 +161,26 @@ export async function POST(req: NextRequest) {
     const allMessages: ChatMessage[] = [systemPrompt, ...messages];
 
     // Demo mode — no real API key
-    if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder") {
+    if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder" || OPENAI_API_KEY === "demo") {
       const lastMsg = allMessages[allMessages.length - 1]?.content || "";
-      const demoText = `I'm ready to help with your teaching question about "${lastMsg.slice(0, 50)}..."\n\n**To enable full AI responses:**\n1. Get an OpenAI API key from https://platform.openai.com/api-keys\n2. Add it to the \`.env\` file: \`OPENAI_API_KEY=sk-...\`\n3. Restart the server with \`pm2 restart pickle-nick\`\n\nIn the meantime, I can help with:\n- Lesson planning (tell me year level, subject, topic)\n- Assessment design (rubrics, success criteria)\n- Behaviour strategies\n- Differentiation approaches\n- Australian Curriculum (AC9) codes`;
+      const demoText = `✅ PickleNickAI is running with full skill knowledge loaded.\n\nYour question: "${lastMsg.slice(0, 80)}..."\n\nI'm ready to help with:\n• Lesson planning (tell me year level, subject, topic)\n• Assessment design (rubrics, success criteria, AC9 codes)\n• Writing feedback (narrative, persuasive, informative)\n• Behaviour strategies\n• Differentiation (EAL/D, gifted, additional needs)\n• Unit planning\n\nWhat would you like help with?`;
       
       const stream = new ReadableStream({
         start(controller) {
           const encoder = new TextEncoder();
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", content: demoText })}\n\n`));
-          controller.close();
+          // Simulate streaming
+          const chars = demoText.split("");
+          let i = 0;
+          const interval = setInterval(() => {
+            if (i >= chars.length) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+              controller.close();
+              clearInterval(interval);
+              return;
+            }
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", content: chars[i] })}\n\n`));
+            i++;
+          }, 10);
         }
       });
       return new Response(stream, {
