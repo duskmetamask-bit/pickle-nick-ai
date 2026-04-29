@@ -40,10 +40,11 @@ interface LessonPlanDisplayProps {
   onDownloadPdf?: () => void;
   onDownloadDOCX?: () => void;
   onDownloadPPTX?: () => void;
+  onSaveToGoogleDrive?: () => void;
   compact?: boolean;
 }
 
-export default function LessonPlanDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX, onDownloadPPTX, compact }: LessonPlanDisplayProps) {
+export default function LessonPlanDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX, onDownloadPPTX, onSaveToGoogleDrive, compact }: LessonPlanDisplayProps) {
   const lines = content.split("\n");
   let title = "Lesson Plan";
   let walt = "";
@@ -105,11 +106,12 @@ export default function LessonPlanDisplay({ content, onSave, onDownloadTxt, onDo
         {/* HEADER */}
         <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: cp ? "12px 14px 10px" : "24px 28px 20px" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
-            {onSave && <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>💾 Save</button>}
-            {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📄 TXT</button>}
-            {onDownloadPdf && <button onClick={onDownloadPdf} style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📕 PDF</button>}
-            {onDownloadDOCX && <button onClick={onDownloadDOCX} style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📘 DOCX</button>}
+            {onSave && <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>Save</button>}
+            {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>TXT</button>}
+            {onDownloadPdf && <button onClick={onDownloadPdf} style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>PDF</button>}
+            {onDownloadDOCX && <button onClick={onDownloadDOCX} style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>DOCX</button>}
             {onDownloadPPTX && <button onClick={onDownloadPPTX} style={{ padding: "7px 16px", background: "#22D3EE", color: "#0a0a0a", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📑 PPTX</button>}
+            {onSaveToGoogleDrive && <button onClick={onSaveToGoogleDrive} style={{ padding: "7px 16px", background: "#1DB954", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)", display: "inline-flex", alignItems: "center", gap: 6 }}>📁 Google Drive</button>}
           </div>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
             <div style={{ flex: 1 }}>
@@ -215,7 +217,9 @@ export default function LessonPlanDisplay({ content, onSave, onDownloadTxt, onDo
           {differentiation && (
             <SectionCard accentColor="#10b981">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ background: "#d1fae5", borderRadius: 8, padding: "6px 8px", fontSize: 15 }}>🌱</div>
+                <div style={{ background: "#d1fae5", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
                 <SectionLabel>Differentiation</SectionLabel>
               </div>
               <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "14px 16px" }}>

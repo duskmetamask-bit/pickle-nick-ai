@@ -412,7 +412,7 @@ export default function CurriculumView() {
             </div>
           ) : (
             <div style={{ textAlign: "center", paddingTop: 80 }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🎓</div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>Learn</div>
               <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: subject?.color }}>{subject?.label}</h2>
               <p style={{ color: "var(--text2)", fontSize: 14 }}>Select a strand to view AC9 content descriptors</p>
             </div>

@@ -103,11 +103,52 @@ npm run build
 ## Environment Variables
 
 ```bash
-OPENAI_API_KEY=    # NVIDIA NIM key (primary)
-NIM_API_KEY=       # NVIDIA NIM key (fallback)
+OPENAI_API_KEY=         # NVIDIA NIM key (primary)
+NIM_API_KEY=            # NVIDIA NIM key (fallback)
+GOOGLE_CLIENT_ID=       # Google OAuth client ID (for Google Drive export)
+GOOGLE_CLIENT_SECRET=   # Google OAuth client secret (for Google Drive export)
+NEXT_PUBLIC_APP_URL=    # Your app URL (e.g. https://pickle-nick-ai.vercel.app)
 ```
 
 If not set, the app runs in demo mode with placeholder responses.
+
+---
+
+## Google Drive Integration
+
+Teachers can save generated content (lesson plans, rubrics, assessments, writing feedback) directly to their Google Drive.
+
+### Setup
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Create a new project (or select existing)
+3. Enable **Google Drive API** (`APIs & Services > Library`)
+4. Go to **APIs & Services > Credentials**
+5. Click **Create Credentials > OAuth client ID**
+6. Application type: **Web application**
+7. Add authorized redirect URI:
+   ```
+   https://pickle-nick-ai.vercel.app/api/auth/google/callback
+   ```
+   (or your custom domain)
+8. Copy the **Client ID** and **Client Secret**
+9. Add them to your environment variables or Vercel project settings
+
+### How It Works
+
+- Teacher clicks "Save to Google Drive" on any generated content
+- App redirects to Google OAuth consent screen (`drive.file` scope — can only access files created by this app)
+- After consent, teacher is redirected back and tokens stored in browser
+- File is uploaded to teacher's Google Drive and a shareable link shown
+- Tokens persist in localStorage — teacher stays connected across sessions
+
+### Scopes Used
+
+| Scope | Purpose |
+|-------|---------|
+| `drive.file` | Create and manage files created by this app only |
+| `userinfo.profile` | Get teacher's name for display |
+| `userinfo.email` | Get teacher's email (for future features) |
 
 ---
 

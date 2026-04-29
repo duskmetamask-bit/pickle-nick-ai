@@ -32,7 +32,7 @@ function saveWritingToProfile(dimensions: Dimension[], overall: string, yearLeve
     const el = b as HTMLElement;
     el.textContent = "✓ Saved";
     el.style.color = "var(--success)";
-    setTimeout(() => { el.textContent = "💾 Save"; el.style.color = ""; }, 1500);
+    setTimeout(() => { el.textContent = "Save"; el.style.color = ""; }, 1500);
   });
 }
 
@@ -273,9 +273,9 @@ export default function WritingFeedbackView() {
                   onClick={() => saveWritingToProfile(dimensions, overallFeedback, yearLevel, taskType)}
                   data-save-btn
                   style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}
-                >💾 Save</button>
-                <button onClick={downloadTxt} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📄 TXT</button>
-                <button onClick={downloadPdf} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📕 PDF</button>
+                >Save</button>
+                <button onClick={downloadTxt} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>TXT</button>
+                <button onClick={downloadPdf} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>PDF</button>
               </div>
             )}
           </div>

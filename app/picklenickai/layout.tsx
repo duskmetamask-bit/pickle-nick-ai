@@ -38,10 +38,10 @@ function SocialProofBanner() {
       flexWrap: "wrap",
     }}>
       {[
-        "✅ AC9 Aligned",
-        "🔒 Private Sessions",
-        "👩‍🏫 Built for Australian Teachers",
-        "🌱 Growing daily",
+        "AC9 Aligned",
+        "Private Sessions",
+        "Built for Australian Teachers",
+        "Growing daily",
       ].map(item => (
         <span key={item} style={{ fontSize: 12, fontWeight: 600, color: "var(--text-2)", whiteSpace: "nowrap" }}>{item}</span>
       ))}
@@ -94,7 +94,7 @@ function PricingModal({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: 
         boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
       }}>
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div style={{ fontSize: 40, marginBottom: "0.75rem" }}>🎓</div>
+          <div style={{ fontSize: 40, marginBottom: "0.75rem" }}>Pro</div>
           <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}>Upgrade to Pro</h2>
           <p style={{ color: "var(--text-2)", fontSize: 13, lineHeight: 1.6 }}>
             You've used your 5 free lesson plans this month. Upgrade to Pro for unlimited access.

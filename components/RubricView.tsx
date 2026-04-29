@@ -24,7 +24,7 @@ function saveRubricToProfile(content: string, label: string) {
     const el = b as HTMLElement;
     el.textContent = "✓ Saved";
     el.style.color = "var(--success)";
-    setTimeout(() => { el.textContent = "💾 Save"; el.style.color = ""; }, 1500);
+    setTimeout(() => { el.textContent = "Save"; el.style.color = ""; }, 1500);
   });
 }
 
@@ -209,19 +209,19 @@ export default function RubricView() {
                   data-save-btn
                   style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                 >
-                  💾 Save
+                  Save
                 </button>
                 <button onClick={() => download("txt")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  📄 TXT
+                  TXT
                 </button>
                 <button onClick={() => download("pdf")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  📕 PDF
+                  PDF
                 </button>
                 <button onClick={() => download("pptx")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
                   📑 PPTX
                 </button>
                 <button onClick={() => download("docx")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  📘 DOCX
+                  DOCX
                 </button>
               </div>
             )}

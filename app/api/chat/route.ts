@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
     // Demo mode — no real API key
     if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder" || OPENAI_API_KEY === "demo") {
       const lastMsg = allMessages[allMessages.length - 1]?.content || "";
-      const demoText = `✅ PickleNickAI is running with full skill knowledge loaded.\n\nYour question: "${lastMsg.slice(0, 80)}..."\n\nI'm ready to help with:\n• Lesson planning (tell me year level, subject, topic)\n• Assessment design (rubrics, success criteria, AC9 codes)\n• Writing feedback (narrative, persuasive, informative)\n• Behaviour strategies\n• Differentiation (EAL/D, gifted, additional needs)\n• Unit planning\n\nWhat would you like help with?`;
+      const demoText = `PickleNickAI is running with full skill knowledge loaded.\n\nYour question: "${lastMsg.slice(0, 80)}..."\n\nI'm ready to help with:\n• Lesson planning (tell me year level, subject, topic)\n• Assessment design (rubrics, success criteria, AC9 codes)\n• Writing feedback (narrative, persuasive, informative)\n• Behaviour strategies\n• Differentiation (EAL/D, gifted, additional needs)\n• Unit planning\n\nWhat would you like help with?`;
       
       if (!wantsStreaming) {
         return NextResponse.json({ reply: demoText });

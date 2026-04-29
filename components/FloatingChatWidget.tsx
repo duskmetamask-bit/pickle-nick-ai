@@ -75,6 +75,78 @@ async function downloadDOCX(content: string, label: string) {
   }
 }
 
+async function saveToGoogleDrive(fileName: string, content: string, mimeType: string = "application/vnd.google-apps.document"): Promise<string | null> {
+  const accessToken = localStorage.getItem("pn_gdrive_access_token");
+  const refreshToken = localStorage.getItem("pn_gdrive_refresh_token");
+  const tokenExpiry = parseInt(localStorage.getItem("pn_gdrive_token_expiry") || "0", 10);
+
+  if (!accessToken && !refreshToken) {
+    // Initiate OAuth flow - open in popup
+    const res = await fetch("/api/auth/google");
+    if (!res.ok) throw new Error("Failed to get auth URL");
+    const { authUrl } = await res.json();
+    const popup = window.open(authUrl, "gdrive_auth", "width=500,height=700");
+
+    return new Promise((resolve) => {
+      const handler = (e: MessageEvent) => {
+        if (e.data?.type === "gdrive_connected") {
+          window.removeEventListener("message", handler);
+          // Token is now in localStorage, retry upload
+          setTimeout(() => saveToGoogleDrive(fileName, content, mimeType).then(resolve), 500);
+        }
+      };
+      window.addEventListener("message", handler);
+      // Timeout after 2 minutes
+      setTimeout(() => { window.removeEventListener("message", handler); resolve(null); }, 120000);
+    });
+  }
+
+  // Check if token is expired
+  let token = accessToken;
+  if (accessToken && tokenExpiry < Date.now() && refreshToken) {
+    // Refresh token
+    try {
+      const res = await fetch("/api/drive-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "refresh", refreshToken }),
+      });
+      const data = await res.json();
+      if (data.access_token) {
+        token = data.access_token;
+        localStorage.setItem("pn_gdrive_access_token", data.access_token);
+        localStorage.setItem("pn_gdrive_token_expiry", String(Date.now() + (data.expires_in || 3600) * 1000));
+      }
+    } catch { /* continue with existing token */ }
+  }
+
+  try {
+    const res = await fetch("/api/drive-upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileName, content, mimeType, accessToken: token }),
+    });
+
+    if (res.status === 401) {
+      // Token expired, clear and prompt re-auth
+      localStorage.removeItem("pn_gdrive_access_token");
+      localStorage.removeItem("pn_gdrive_refresh_token");
+      localStorage.removeItem("pn_gdrive_token_expiry");
+      throw new Error("Token expired");
+    }
+
+    const data = await res.json();
+    if (data.driveLink) {
+      return data.driveLink;
+    } else {
+      throw new Error(data.error || "Upload failed");
+    }
+  } catch (err) {
+    alert("Google Drive upload failed: " + (err as Error).message);
+    return null;
+  }
+}
+
 interface FloatingChatWidgetProps {
   profile: Profile;
   initialCollapsed?: boolean;
@@ -433,6 +505,7 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
                         onDownloadTxt={() => downloadTxt(msg.content, "lesson-plan")}
                         onDownloadPdf={() => downloadPdf(msg.content, "lesson-plan")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "lesson-plan")}
+                        onSaveToGoogleDrive={() => saveToGoogleDrive("Lesson Plan - " + new Date().toLocaleDateString(), msg.content).then(link => { if (link) alert("Saved to Google Drive: " + link); })}
                       />
                     )}
                     {msg.contentType === "rubric" && (
@@ -442,6 +515,7 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
                         onDownloadTxt={() => downloadTxt(msg.content, "rubric")}
                         onDownloadPdf={() => downloadPdf(msg.content, "rubric")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "rubric")}
+                        onSaveToGoogleDrive={() => saveToGoogleDrive("Rubric - " + new Date().toLocaleDateString(), msg.content).then(link => { if (link) alert("Saved to Google Drive: " + link); })}
                       />
                     )}
                     {msg.contentType === "assessment" && (
@@ -451,6 +525,7 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
                         onDownloadTxt={() => downloadTxt(msg.content, "assessment")}
                         onDownloadPdf={() => downloadPdf(msg.content, "assessment")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "assessment")}
+                        onSaveToGoogleDrive={() => saveToGoogleDrive("Assessment - " + new Date().toLocaleDateString(), msg.content).then(link => { if (link) alert("Saved to Google Drive: " + link); })}
                       />
                     )}
                     {msg.contentType === "feedback" && (
@@ -460,6 +535,7 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
                         onDownloadTxt={() => downloadTxt(msg.content, "feedback")}
                         onDownloadPdf={() => downloadPdf(msg.content, "feedback")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "feedback")}
+                        onSaveToGoogleDrive={() => saveToGoogleDrive("Writing Feedback - " + new Date().toLocaleDateString(), msg.content).then(link => { if (link) alert("Saved to Google Drive: " + link); })}
                       />
                     )}
                     {msg.contentType === "other" && (

@@ -335,9 +335,9 @@ export default function WorkflowsView() {
       {/* Tab bar */}
       <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border)", padding: "0 28px" }}>
         {([
-          { id: "term", label: "Term Planning", icon: "📅" },
-          { id: "report", label: "Reporting", icon: "📋" },
-          { id: "assess", label: "Assessment Cycle", icon: "🔄" },
+          { id: "term", label: "Term Planning", icon: "" },
+          { id: "report", label: "Reporting", icon: "" },
+          { id: "assess", label: "Assessment Cycle", icon: "" },
         ] as const).map(t => (
           <button
             key={t.id}

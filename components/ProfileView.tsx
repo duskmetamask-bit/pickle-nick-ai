@@ -276,7 +276,7 @@ export default function ProfileView() {
               <div style={{ fontSize: 40, marginBottom: 12 }}>📂</div>
               <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: "var(--text-2)" }}>No saved documents yet</div>
               <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-                Use the <strong style={{ fontWeight: 600, color: "var(--text-2)" }}>💾 Save</strong> button on any chat response to save it here
+                Use the <strong style={{ fontWeight: 600, color: "var(--text-2)" }}>Save</strong> button on any chat response to save it here
               </div>
             </div>
           ) : (

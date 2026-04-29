@@ -110,18 +110,20 @@ function UnitPlanDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDown
         <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: "28px 32px 24px" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 20 }}>
             {onSave && (
-              <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>💾 Save</button>
+              <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>Save</button>
             )}
-            {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📄 TXT</button>}
-            {onDownloadPdf && <button onClick={onDownloadPdf} style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📕 PDF</button>}
+            {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>TXT</button>}
+            {onDownloadPdf && <button onClick={onDownloadPdf} style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>PDF</button>}
             {onDownloadPPTX && <button onClick={onDownloadPPTX} style={{ padding: "7px 16px", background: "#22D3EE", color: "#0a0a0a", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📑 PPTX</button>}
-            {onDownloadDOCX && <button onClick={onDownloadDOCX} style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📘 DOCX</button>}
+            {onDownloadDOCX && <button onClick={onDownloadDOCX} style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>DOCX</button>}
           </div>
 
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 10px", fontSize: 20 }}>📚</div>
+                <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.6)", marginBottom: 3 }}>PickleNickAI</div>
                   <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.5)" }}>Unit Plan</div>
@@ -154,7 +156,9 @@ function UnitPlanDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDown
           {parsed.lessonRows.length > 0 && (
             <UnitSectionCard accentColor="#6366f1">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <div style={{ background: "#eef2ff", borderRadius: 8, padding: "6px 8px", fontSize: 16 }}>📅</div>
+                <div style={{ background: "#eef2ff", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
                 <UnitSectionLabel>Scope & Sequence</UnitSectionLabel>
               </div>
               <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #f0f0f0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -199,7 +203,9 @@ function UnitPlanDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDown
           {(parsed.strands || parsed.duration || (parsed.ac9Codes && parsed.ac9Codes.length > 0)) && (
             <UnitSectionCard accentColor="#8b5cf6">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <div style={{ background: "#ede9fe", borderRadius: 8, padding: "6px 8px", fontSize: 16 }}>🔢</div>
+                <div style={{ background: "#ede9fe", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+                </div>
                 <UnitSectionLabel>Unit Details</UnitSectionLabel>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
@@ -282,7 +288,7 @@ function saveUnitToProfile(content: string, label: string) {
   btns.forEach(b => {
     const el = b as HTMLElement;
     el.textContent = "✓ Saved"; el.style.color = "var(--success)";
-    setTimeout(() => { el.textContent = "💾 Save Unit"; el.style.color = ""; }, 1500);
+    setTimeout(() => { el.textContent = "Save Unit"; el.style.color = ""; }, 1500);
   });
 }
 
@@ -690,9 +696,9 @@ export default function LibraryView() {
               if (!lastAssistant || isStructuredContent(lastAssistant.content)) return null;
               return (
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingLeft: 32 }}>
-                  <button onClick={() => saveChatUnit(lastAssistant.content)} data-save-btn style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>💾 Save Unit</button>
-                  <button onClick={() => exportChatUnitTxt(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>📄 TXT</button>
-                  <button onClick={() => exportChatUnitPdf(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📕 PDF</button>
+                  <button onClick={() => saveChatUnit(lastAssistant.content)} data-save-btn style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>Save Unit</button>
+                  <button onClick={() => exportChatUnitTxt(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>TXT</button>
+                  <button onClick={() => exportChatUnitPdf(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>PDF</button>
                   <button onClick={() => exportChatUnitPPTX(lastAssistant.content)} style={{ padding: "5px 12px", background: "#22D3EE", color: "#0a0a0a", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📑 PPTX</button>
                 </div>
               );
@@ -717,7 +723,7 @@ export default function LibraryView() {
             </div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+              <div style={{ fontSize: 40, marginBottom: 12, color: "var(--primary)" }}>Find</div>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, color: "var(--text2)" }}>No units found</div>
               <div style={{ fontSize: 13, color: "var(--text3)", marginBottom: 16 }}>
                 {search || subject || year ? "Try different filters or clear your search" : "No units are available yet"}
@@ -769,7 +775,7 @@ export default function LibraryView() {
                     data-save-btn
                     style={{ padding: "7px 13px", background: unitSaved ? "var(--success)" : "var(--surface2)", color: unitSaved ? "#fff" : "var(--text2)", border: "1px solid var(--border)", borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
                   >
-                    {unitSaved ? "✓ Saved" : "💾 Save"}
+                    {unitSaved ? "✓ Saved" : "Save"}
                   </button>
                   <button onClick={exportFullUnitTXT} style={{ padding: "7px 13px", background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)", borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
                     TXT
@@ -849,7 +855,7 @@ export default function LibraryView() {
                                 data-save-btn
                                 style={{ padding: "6px 14px", background: lessonSaved === lesson.id ? "var(--success)" : "var(--surface)", color: lessonSaved === lesson.id ? "#fff" : "var(--text2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                               >
-                                {lessonSaved === lesson.id ? "✓ Saved" : "💾 Save Lesson"}
+                                {lessonSaved === lesson.id ? "✓ Saved" : "Save Lesson"}
                               </button>
                               <div style={{ display: "flex", gap: 5 }}>
                                 <button onClick={() => exportLessonTXT(lesson)} style={{ padding: "6px 12px", background: "var(--surface)", color: "var(--text2)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>TXT</button>
@@ -857,7 +863,7 @@ export default function LibraryView() {
                                   onClick={() => exportLessonPDF(lesson)}
                                   style={{ padding: "6px 12px", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                                 >
-                                  📕 PDF
+                                  PDF
                                 </button>
                                 <button
                                   onClick={() => exportLessonPPTX(lesson)}
@@ -906,7 +912,7 @@ export default function LibraryView() {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text3)", textAlign: "center" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📚</div>
+              <div style={{ fontSize: 40, marginBottom: 16, color: "var(--primary)", fontWeight: 800 }}>Unit Library</div>
               <p style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: "var(--text2)" }}>Select a unit to read it</p>
             </div>
           )}

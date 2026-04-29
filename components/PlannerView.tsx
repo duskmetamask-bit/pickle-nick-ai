@@ -202,7 +202,7 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
                   transition: "all 0.15s",
                 }}
               >
-                💾 Save
+                Save
               </button>
             )}
             {onDownload && (
@@ -211,13 +211,13 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
                   onClick={() => onDownload("txt")}
                   style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}
                 >
-                  📄 TXT
+                  TXT
                 </button>
                 <button
                   onClick={() => onDownload("pdf")}
                   style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
                 >
-                  📕 PDF
+                  PDF
                 </button>
                 <button
                   onClick={() => onDownload("pptx")}
@@ -229,7 +229,7 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
                   onClick={() => onDownload("docx")}
                   style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}
                 >
-                  📘 DOCX
+                  DOCX
                 </button>
               </>
             )}
@@ -239,8 +239,8 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
           <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
             <div style={{ flex: 1 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 10px", fontSize: 20 }}>
-                  📋
+                <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.6)", marginBottom: 3 }}>
@@ -286,7 +286,9 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
           {(parsed.walt || parsed.tib) && (
             <SectionCard accentColor="#6366f1">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <div style={{ background: "#eef2ff", borderRadius: 8, padding: "6px 8px", fontSize: 16 }}>🎯</div>
+                <div style={{ background: "#eef2ff", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
                 <SectionLabel>Learning Intention</SectionLabel>
               </div>
 
@@ -338,7 +340,9 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
           {parsed.wilfItems.length > 0 && (
             <SectionCard accentColor="#22c55e">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <div style={{ background: "#f0fdf4", borderRadius: 8, padding: "6px 8px", fontSize: 16 }}>✅</div>
+                <div style={{ background: "#f0fdf4", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
                 <SectionLabel>Success Criteria — What I'm Looking For</SectionLabel>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -367,7 +371,9 @@ function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; o
           {parsed.phases.length > 0 && (
             <SectionCard accentColor="#f59e0b">
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <div style={{ background: "#fef3c7", borderRadius: 8, padding: "6px 8px", fontSize: 16 }}>📅</div>
+                <div style={{ background: "#fef3c7", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
                 <SectionLabel>Lesson Structure</SectionLabel>
               </div>
               <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #f0f0f0", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -555,7 +561,7 @@ function savePlanToProfile(content: string, label: string) {
   savedDocs.unshift({ id: Date.now().toString(36), type: "lesson", label, content, savedAt: Date.now() });
   localStorage.setItem("pn-saved-docs", JSON.stringify(savedDocs.slice(0, 50)));
   const btns = document.querySelectorAll(`[data-save-btn]`);
-  btns.forEach(b => { const el = b as HTMLElement; el.textContent = "✓ Saved"; el.style.color = "var(--success)"; setTimeout(() => { el.textContent = "💾 Save"; el.style.color = ""; }, 1500); });
+  btns.forEach(b => { const el = b as HTMLElement; el.textContent = "✓ Saved"; el.style.color = "var(--success)"; setTimeout(() => { el.textContent = "Save"; el.style.color = ""; }, 1500); });
 }
 
 function downloadChatPlanTxt(content: string) {
@@ -750,7 +756,7 @@ export default function PlannerView() {
     savedDocs.unshift({ id: Date.now().toString(36), type: "lesson", label: `Lesson Plan — ${subject} ${yearLevel} ${topic}`, content: result, savedAt: Date.now() });
     localStorage.setItem("pn-saved-docs", JSON.stringify(savedDocs.slice(0, 50)));
     const btns = document.querySelectorAll(`[data-save-btn]`);
-    btns.forEach(b => { const el = b as HTMLElement; el.textContent = "✓ Saved"; el.style.color = "var(--success)"; setTimeout(() => { el.textContent = "💾 Save"; el.style.color = ""; }, 1500); });
+    btns.forEach(b => { const el = b as HTMLElement; el.textContent = "✓ Saved"; el.style.color = "var(--success)"; setTimeout(() => { el.textContent = "Save"; el.style.color = ""; }, 1500); });
   }
 
   const inputStyle: React.CSSProperties = {
@@ -852,11 +858,11 @@ export default function PlannerView() {
               if (!lastAssistant || isStructuredContent(lastAssistant.content)) return null;
               return (
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", paddingLeft: 38 }}>
-                  <button onClick={() => savePlanToProfile(lastAssistant.content, "Chat Lesson Plan")} data-save-btn style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>💾 Save</button>
-                  <button onClick={() => downloadChatPlanTxt(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📄 TXT</button>
-                  <button onClick={() => downloadChatPlanPdf(lastAssistant.content)} style={{ padding: "5px 12px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📕 PDF</button>
+                  <button onClick={() => savePlanToProfile(lastAssistant.content, "Chat Lesson Plan")} data-save-btn style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>Save</button>
+                  <button onClick={() => downloadChatPlanTxt(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 20, fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>TXT</button>
+                  <button onClick={() => downloadChatPlanPdf(lastAssistant.content)} style={{ padding: "5px 12px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>PDF</button>
                   <button onClick={() => downloadChatPlanPPTX(lastAssistant.content)} style={{ padding: "5px 12px", background: "#22D3EE", color: "#0a0a0a", border: "none", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📑 PPTX</button>
-                  <button onClick={() => downloadChatPlanDOCX(lastAssistant.content)} style={{ padding: "5px 12px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📘 DOCX</button>
+                  <button onClick={() => downloadChatPlanDOCX(lastAssistant.content)} style={{ padding: "5px 12px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>DOCX</button>
                 </div>
               );
             })()}
@@ -957,7 +963,9 @@ export default function PlannerView() {
               <LessonPlanDisplay content={result} onSave={savePlan} onDownload={(fmt) => download(fmt)} />
             ) : (
               <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 20, textAlign: "center", paddingTop: 80, paddingBottom: 80, boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
-                <div style={{ fontSize: 48, marginBottom: 14 }}>📋</div>
+                <div style={{ background: "rgba(99,102,241,0.15)", borderRadius: 10, padding: "10px 14px", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
                 <div style={{ fontWeight: 700, fontSize: 16, color: "#1e293b", marginBottom: 6 }}>Your lesson plan will appear here</div>
                 <div style={{ fontSize: 13, color: "#9ca3af" }}>Fill in the form → click Generate</div>
               </div>

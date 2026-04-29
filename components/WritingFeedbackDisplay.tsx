@@ -9,6 +9,7 @@ interface WritingFeedbackDisplayProps { compact?: boolean;
   onDownloadTxt?: () => void;
   onDownloadPdf?: () => void;
   onDownloadDOCX?: () => void;
+  onSaveToGoogleDrive?: () => void;
 }
 
 function SectionCard({ accentColor, children }: { accentColor: string; children: React.ReactNode }) {
@@ -31,7 +32,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function WritingFeedbackDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX, compact }: WritingFeedbackDisplayProps) {
+export default function WritingFeedbackDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX, onSaveToGoogleDrive, compact }: WritingFeedbackDisplayProps) {
   const cp = compact;
   const titleMatch = content.match(/^#\s+(.+?)\n/im);
   const title = titleMatch ? titleMatch[1].trim() : "Writing Feedback";
@@ -57,13 +58,16 @@ export default function WritingFeedbackDisplay({ content, onSave, onDownloadTxt,
         {/* HEADER */}
         <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: cp ? "12px 14px 10px" : "24px 28px 20px" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
-            {onSave && <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>💾 Save</button>}
-            {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📄 TXT</button>}
-            {onDownloadPdf && <button onClick={onDownloadPdf} style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📕 PDF</button>}
-            {onDownloadDOCX && <button onClick={onDownloadDOCX} style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>📘 DOCX</button>}
+            {onSave && <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>Save</button>}
+            {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>TXT</button>}
+            {onDownloadPdf && <button onClick={onDownloadPdf} style={{ padding: "7px 16px", background: "#fff", color: "#312e81", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>PDF</button>}
+            {onDownloadDOCX && <button onClick={onDownloadDOCX} style={{ padding: "7px 16px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>DOCX</button>}
+            {onSaveToGoogleDrive && <button onClick={onSaveToGoogleDrive} style={{ padding: "7px 16px", background: "#1DB954", color: "#fff", border: "none", borderRadius: 24, fontSize: 12, fontWeight: 700, cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.15)", display: "inline-flex", alignItems: "center", gap: 6 }}>📁 Google Drive</button>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 0 }}>
-            <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 10px", fontSize: 18 }}>✍️</div>
+            <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: "6px 10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            </div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.6)", marginBottom: 3 }}>PickleNickAI</div>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.5)" }}>Writing Feedback</div>
@@ -81,7 +85,9 @@ export default function WritingFeedbackDisplay({ content, onSave, onDownloadTxt,
               {strengths && (
                 <SectionCard accentColor="#10b981">
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ background: "#d1fae5", borderRadius: 8, padding: "6px 8px", fontSize: 15 }}>✅</div>
+                    <div style={{ background: "#d1fae5", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
                     <SectionLabel>Strengths</SectionLabel>
                   </div>
                   <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "14px 16px" }}>
@@ -94,7 +100,9 @@ export default function WritingFeedbackDisplay({ content, onSave, onDownloadTxt,
               {areas && (
                 <SectionCard accentColor="#f59e0b">
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                    <div style={{ background: "#fef3c7", borderRadius: 8, padding: "6px 8px", fontSize: 15 }}>🎯</div>
+                    <div style={{ background: "#fef3c7", borderRadius: 8, padding: "6px 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    </div>
                     <SectionLabel>Areas to Develop</SectionLabel>
                   </div>
                   <div style={{ background: "#fffbeb", borderRadius: 10, padding: "14px 16px" }}>

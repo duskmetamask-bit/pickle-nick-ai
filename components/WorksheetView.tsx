@@ -197,8 +197,8 @@ export default function WorksheetView() {
             <h2 style={{ fontSize: 15, fontWeight: 700 }}>Generated Worksheet</h2>
             {result && (
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <button onClick={() => download("txt")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📄 TXT</button>
-                <button onClick={() => download("pdf")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📕 PDF</button>
+                <button onClick={() => download("txt")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>TXT</button>
+                <button onClick={() => download("pdf")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>PDF</button>
                 <button onClick={() => download("pptx")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📑 PPTX</button>
               </div>
             )}
