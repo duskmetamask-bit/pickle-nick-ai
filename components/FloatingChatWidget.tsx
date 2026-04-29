@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import LessonPlanDisplay from "./LessonPlanDisplay";
@@ -11,12 +11,10 @@ interface Message { role: "user" | "assistant"; content: string; streaming?: boo
 interface Profile { name: string; yearLevels: string[]; subjects: string[]; focusAreas?: string[]; school?: string; }
 
 const QUICK_PROMPTS = [
-  { label: "Behaviour support plan", prompt: "Create a behaviour support plan for a Year 4 student who..." },
-  { label: "Report comment", prompt: "Write a report comment for a Year 5 student who..." },
-  { label: "Parent email", prompt: "Write a parent email about..." },
   { label: "Lesson plan", prompt: "Write a lesson plan on..." },
   { label: "AC9 codes", prompt: "What are the AC9 codes for..." },
   { label: "Differentiation", prompt: "Help me differentiate this lesson for..." },
+  { label: "Report comment", prompt: "Write a report comment for..." },
 ];
 
 function isStructuredContent(content: string): boolean {
@@ -77,13 +75,22 @@ async function downloadDOCX(content: string, label: string) {
   }
 }
 
-export default function ChatView({ profile }: { profile: Profile }) {
-  const initialMessage = `Hi ${profile.name}! I'm PickleNickAI — your teaching colleague who never sleeps.\n\nAsk me anything a knowledgeable teacher would know:\n• Lesson plans, unit outlines, worksheets\n• Behaviour support, de-escalation, wellbeing strategies\n• Rubrics, assessment tasks, feedback\n• Parent emails, report comments, communications\n• AC9 codes, curriculum alignment, scope & sequence\n• WA mandatory reporting, AITSL standards, state requirements\n• Differentiation for EAL/D, Gifted, Additional Needs\n\nWhat can I help you with today?`;
+interface FloatingChatWidgetProps {
+  profile: Profile;
+  initialCollapsed?: boolean;
+}
+
+export default function FloatingChatWidget({ profile, initialCollapsed = true }: FloatingChatWidgetProps) {
+  const [isExpanded, setIsExpanded] = useState(!initialCollapsed);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [showChips, setShowChips] = useState(true);
+  const [unread, setUnread] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const wasExpandedRef = useRef(isExpanded);
+
   const [sessionId] = useState(() => {
     if (typeof window !== "undefined") {
       let id = localStorage.getItem("pn-chat-session");
@@ -93,20 +100,45 @@ export default function ChatView({ profile }: { profile: Profile }) {
     return "";
   });
 
+  const initialMessage = `Hi ${profile.name}! I'm PickleNickAI — ask me anything about lesson plans, rubrics, behaviour support, AC9 codes, and more.`;
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
     content: initialMessage,
   }]);
 
+  // Track unread messages when minimized
+  useEffect(() => {
+    if (isMinimized && messages.length > 1) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === "assistant" && !lastMsg.streaming) {
+        setUnread(u => u + 1);
+      }
+    }
+  }, [messages, isMinimized]);
+
+  // Auto-scroll
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  function send(text?: string) {
+  // Expand on new message when minimized
+  useEffect(() => {
+    if (isMinimized && messages.length > 1) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === "assistant" && !lastMsg.streaming) {
+        setIsMinimized(false);
+        setIsExpanded(true);
+        setUnread(0);
+      }
+    }
+  }, [messages, isMinimized]);
+
+  const send = useCallback((text?: string) => {
     const textToSend = (text ?? input).trim();
     if (!textToSend || isStreaming) return;
 
     const userMsg: Message = { role: "user", content: textToSend };
     setMessages(m => [...m, userMsg]);
     if (!text) setInput("");
+    setShowChips(false);
 
     const assistantMsg: Message = { role: "assistant", content: "", streaming: true };
     setMessages(m => [...m, assistantMsg]);
@@ -178,63 +210,190 @@ export default function ChatView({ profile }: { profile: Profile }) {
         setIsStreaming(false);
         setMessages(m => m.map(msg => ({ ...msg, streaming: false })));
       });
+  }, [input, isStreaming, messages, sessionId, profile]);
+
+  // ── Collapsed button ────────────────────────────────────────────────
+  if (!isExpanded) {
+    return (
+      <button
+        onClick={() => { setIsExpanded(true); setUnread(0); }}
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #6366f1, #818cf8)",
+          border: "none",
+          cursor: "pointer",
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 24px rgba(99,102,241,0.4), 0 0 0 0 rgba(99,102,241,0.4)",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = "scale(1.08)";
+          e.currentTarget.style.boxShadow = "0 6px 32px rgba(99,102,241,0.5)";
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.boxShadow = "0 4px 24px rgba(99,102,241,0.4)";
+        }}
+        aria-label="Open chat"
+      >
+        {/* Chat icon */}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+
+        {/* Unread badge */}
+        {unread > 0 && (
+          <div style={{
+            position: "absolute",
+            top: -2,
+            right: -2,
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: "#f87171",
+            color: "#fff",
+            fontSize: 11,
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "2px solid #0a0a0a",
+          }}>
+            {unread > 9 ? "9+" : unread}
+          </div>
+        )}
+
+        {/* Pulse ring animation */}
+        <div style={{
+          position: "absolute",
+          inset: -4,
+          borderRadius: "50%",
+          border: "2px solid rgba(99,102,241,0.3)",
+          animation: "pulse-ring 2s ease-out infinite",
+          pointerEvents: "none",
+        }} />
+      </button>
+    );
   }
 
+  // ── Expanded widget ─────────────────────────────────────────────────
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
-      {/* Chat header */}
+    <div
+      style={{
+        position: "fixed",
+        bottom: 24,
+        right: 24,
+        width: 380,
+        height: 560,
+        background: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: 16,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)",
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        animation: "slide-up 0.2s ease-out",
+      }}
+    >
+      {/* Header */}
       <div style={{
-        padding: "16px 24px",
+        padding: "12px 16px",
         borderBottom: "1px solid var(--border-subtle)",
-        background: "var(--bg)",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        background: "var(--surface)",
         flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={{
             background: "linear-gradient(135deg, #6366f1, #818cf8)",
-            width: 36, height: 36, borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 900, fontSize: 13, color: "#fff",
-            boxShadow: "0 0 16px rgba(99,102,241,0.3)",
-            flexShrink: 0,
+            width: 32,
+            height: 32,
+            borderRadius: 9,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 900,
+            fontSize: 12,
+            color: "#fff",
+            boxShadow: "0 0 14px rgba(99,102,241,0.35)",
           }}>PN</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: "-0.01em" }}>PickleNickAI</div>
-            <div style={{ fontSize: 12, color: "var(--success)", display: "flex", alignItems: "center", gap: 5 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--success)", animation: "pulse-dot 2s ease-in-out infinite" }} />
-              Online · AC9 aligned
+            <div style={{ fontWeight: 700, fontSize: 13, letterSpacing: "-0.01em" }}>PickleNickAI</div>
+            <div style={{ fontSize: 11, color: "var(--success)", display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--success)" }} />
+              Online
             </div>
           </div>
         </div>
 
-        {/* New chat */}
-        <button
-          onClick={() => {
-            setMessages([{ role: "assistant", content: `Hi ${profile.name}! I'm PickleNickAI. What would you like to work on today?` }]);
-          }}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "7px 14px",
-            background: "var(--surface-2)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: 13, fontWeight: 500, color: "var(--text-2)",
-            cursor: "pointer",
-          }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          New chat
-        </button>
+        <div style={{ display: "flex", gap: 6 }}>
+          {/* New chat */}
+          <button
+            onClick={() => setMessages([{ role: "assistant", content: `Hi ${profile.name}! I'm PickleNickAI. What would you like to work on today?` }])}
+            title="New chat"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+              color: "var(--text-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 13,
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+
+          {/* Minimize */}
+          <button
+            onClick={() => { setIsExpanded(false); setIsMinimized(true); }}
+            title="Minimize"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              background: "var(--surface-2)",
+              border: "1px solid var(--border)",
+              color: "var(--text-2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 13,
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
       <div style={{
-        flex: 1, overflowY: "auto",
-        padding: "24px",
-        display: "flex", flexDirection: "column", gap: 20,
+        flex: 1,
+        overflowY: "auto",
+        padding: "12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
       }}>
         {messages.map((msg, i) => {
           const isStructured = msg.role === "assistant" && !msg.streaming && isStructuredContent(msg.content);
@@ -244,27 +403,33 @@ export default function ChatView({ profile }: { profile: Profile }) {
               display: "flex",
               justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
               alignItems: "flex-start",
-              gap: 10,
-              animation: "fade-in 0.2s ease-out",
+              gap: 7,
+              animation: "fade-in 0.15s ease-out",
             }}>
-              {/* Avatar — assistant only */}
               {msg.role === "assistant" && (
                 <div style={{
                   background: "linear-gradient(135deg, #6366f1, #818cf8)",
-                  width: 28, height: 28, borderRadius: 8,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontWeight: 900, fontSize: 11, color: "#fff",
-                  flexShrink: 0, marginTop: 2,
-                  boxShadow: "0 0 12px rgba(99,102,241,0.3)",
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: 9,
+                  color: "#fff",
+                  flexShrink: 0,
+                  marginTop: 2,
                 }}>PN</div>
               )}
 
-              <div style={{ maxWidth: msg.contentType ? "90%" : "72%" }}>
+              <div style={{ maxWidth: msg.contentType ? "95%" : "80%" }}>
                 {msg.contentType && msg.role === "assistant" && !msg.streaming ? (
                   <>
                     {msg.contentType === "lesson" && (
                       <LessonPlanDisplay
                         content={msg.content}
+                        compact
                         onDownloadTxt={() => downloadTxt(msg.content, "lesson-plan")}
                         onDownloadPdf={() => downloadPdf(msg.content, "lesson-plan")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "lesson-plan")}
@@ -273,6 +438,7 @@ export default function ChatView({ profile }: { profile: Profile }) {
                     {msg.contentType === "rubric" && (
                       <RubricDisplay
                         content={msg.content}
+                        compact
                         onDownloadTxt={() => downloadTxt(msg.content, "rubric")}
                         onDownloadPdf={() => downloadPdf(msg.content, "rubric")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "rubric")}
@@ -281,6 +447,7 @@ export default function ChatView({ profile }: { profile: Profile }) {
                     {msg.contentType === "assessment" && (
                       <AssessmentDisplay
                         content={msg.content}
+                        compact
                         onDownloadTxt={() => downloadTxt(msg.content, "assessment")}
                         onDownloadPdf={() => downloadPdf(msg.content, "assessment")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "assessment")}
@@ -289,29 +456,32 @@ export default function ChatView({ profile }: { profile: Profile }) {
                     {msg.contentType === "feedback" && (
                       <WritingFeedbackDisplay
                         content={msg.content}
+                        compact
                         onDownloadTxt={() => downloadTxt(msg.content, "feedback")}
                         onDownloadPdf={() => downloadPdf(msg.content, "feedback")}
                         onDownloadDOCX={() => downloadDOCX(msg.content, "feedback")}
                       />
                     )}
                     {msg.contentType === "other" && (
-                      <div style={{ padding: "12px 16px", borderRadius: "14px 14px 14px 4px", background: "var(--surface-2)", color: "var(--text)", fontSize: 14, lineHeight: 1.65, border: "1px solid var(--border-subtle)" }}>
+                      <div style={{ padding: "9px 12px", borderRadius: "11px 11px 11px 3px", background: "var(--surface-2)", color: "var(--text)", fontSize: 12.5, lineHeight: 1.6, border: "1px solid var(--border-subtle)" }}>
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                       </div>
                     )}
                   </>
                 ) : (
                   <div style={{
-                    padding: "12px 16px",
+                    padding: "9px 12px",
                     borderRadius: msg.role === "user"
-                      ? "14px 14px 4px 14px"
-                      : "14px 14px 14px 4px",
+                      ? "12px 12px 3px 12px"
+                      : "12px 12px 12px 3px",
                     background: msg.role === "user"
                       ? "var(--primary)"
                       : "var(--surface-2)",
                     color: msg.role === "user" ? "#fff" : "var(--text)",
-                    fontSize: 14, lineHeight: 1.65,
-                    whiteSpace: "pre-wrap", wordBreak: "break-word",
+                    fontSize: 12.5,
+                    lineHeight: 1.6,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
                     border: msg.role === "assistant" ? "1px solid var(--border-subtle)" : "none",
                   }}>
                     {msg.content}
@@ -321,28 +491,28 @@ export default function ChatView({ profile }: { profile: Profile }) {
                   </div>
                 )}
 
-                {/* Action bar for structured content */}
+                {/* Action bar */}
                 {msg.contentType && !msg.streaming && msg.role === "assistant" && (
-                  <div style={{
-                    display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap",
-                  }}>
+                  <div style={{ display: "flex", gap: 4, marginTop: 5, flexWrap: "wrap" }}>
                     {[
                       { label: "Copy", action: () => navigator.clipboard.writeText(msg.content) },
                       { label: "PDF", action: () => downloadPdf(msg.content, msg.contentType || "content") },
                       { label: "TXT", action: () => downloadTxt(msg.content, msg.contentType || "content") },
-                      { label: "DOCX", action: () => downloadDOCX(msg.content, msg.contentType || "content") },
                     ].map(btn => (
                       <button
                         key={btn.label}
                         onClick={btn.action}
                         style={{
-                          padding: "5px 10px",
+                          padding: "3px 8px",
                           background: "var(--surface)",
                           border: "1px solid var(--border)",
                           borderRadius: "var(--radius-sm)",
-                          fontSize: 12, color: "var(--text-2)",
+                          fontSize: 11,
+                          color: "var(--text-2)",
                           cursor: "pointer",
-                          display: "flex", alignItems: "center", gap: 4,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 3,
                           transition: "all 0.12s",
                         }}
                       >
@@ -356,23 +526,24 @@ export default function ChatView({ profile }: { profile: Profile }) {
           );
         })}
 
-        {/* Streaming indicator */}
         {isStreaming && messages[messages.length - 1]?.streaming && (
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <div style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
             <div style={{
               background: "linear-gradient(135deg, #6366f1, #818cf8)",
-              width: 28, height: 28, borderRadius: 8,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontWeight: 900, fontSize: 11, color: "#fff",
-              flexShrink: 0, marginTop: 2,
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 900,
+              fontSize: 9,
+              color: "#fff",
+              flexShrink: 0,
             }}>PN</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{
-                width: 6, height: 6, borderRadius: "50%",
-                background: "var(--primary)",
-                animation: "pulse-dot 1.5s ease-in-out infinite",
-              }} />
-              <span style={{ fontSize: 13, color: "var(--text-3)" }}>Generating...</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--primary)", animation: "pulse-dot 1.5s ease-in-out infinite" }} />
+              <span style={{ fontSize: 11, color: "var(--text-3)" }}>Generating...</span>
             </div>
           </div>
         )}
@@ -380,29 +551,21 @@ export default function ChatView({ profile }: { profile: Profile }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Quick prompts — shown only on first exchange */}
+      {/* Quick prompts */}
       {messages.length === 1 && showChips && (
-        <div style={{ padding: "0 24px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ padding: "0 10px 8px", display: "flex", gap: 5, flexWrap: "wrap" }}>
           {QUICK_PROMPTS.map(q => (
             <button
               key={q.label}
               onClick={() => { send(q.prompt); setShowChips(false); }}
               style={{
-                padding: "7px 14px",
-                background: "var(--surface)",
+                padding: "5px 10px",
+                background: "var(--surface-2)",
                 border: "1px solid var(--border)",
                 borderRadius: "var(--radius-full)",
-                fontSize: 12, color: "var(--text-2)",
+                fontSize: 11,
+                color: "var(--text-2)",
                 cursor: "pointer",
-                transition: "all 0.12s",
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = "var(--surface-2)";
-                e.currentTarget.style.color = "var(--text)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = "var(--surface)";
-                e.currentTarget.style.color = "var(--text-2)";
               }}
             >
               {q.label}
@@ -413,17 +576,19 @@ export default function ChatView({ profile }: { profile: Profile }) {
 
       {/* Input */}
       <div style={{
-        padding: "14px 24px 20px",
+        padding: "10px 12px 12px",
         borderTop: "1px solid var(--border-subtle)",
-        background: "var(--bg)",
+        background: "var(--surface)",
+        flexShrink: 0,
       }}>
         <div style={{
-          display: "flex", gap: 10, alignItems: "flex-end",
-          background: "var(--surface)",
+          display: "flex",
+          gap: 8,
+          alignItems: "flex-end",
+          background: "var(--surface-2)",
           border: "1px solid var(--border)",
-          borderRadius: "var(--radius-lg)",
-          padding: "6px 6px 6px 16px",
-          transition: "border-color 0.15s",
+          borderRadius: "var(--radius)",
+          padding: "5px 5px 5px 12px",
         }}>
           <textarea
             ref={textareaRef}
@@ -435,7 +600,7 @@ export default function ChatView({ profile }: { profile: Profile }) {
                 send();
               }
             }}
-            placeholder="Ask about lesson plans, rubrics, behaviour, AC9..."
+            placeholder="Ask me anything..."
             disabled={isStreaming}
             rows={1}
             style={{
@@ -444,11 +609,11 @@ export default function ChatView({ profile }: { profile: Profile }) {
               color: "var(--text)",
               border: "none",
               outline: "none",
-              fontSize: 14,
+              fontSize: 13,
               lineHeight: 1.5,
               resize: "none",
-              padding: "8px 0",
-              maxHeight: 120,
+              padding: "6px 0",
+              maxHeight: 80,
               overflowY: "auto",
             }}
           />
@@ -456,26 +621,25 @@ export default function ChatView({ profile }: { profile: Profile }) {
             onClick={() => send()}
             disabled={!input.trim() || isStreaming}
             style={{
-              width: 38, height: 38,
-              background: input.trim() && !isStreaming ? "var(--primary)" : "var(--surface-2)",
+              width: 32,
+              height: 32,
+              background: input.trim() && !isStreaming ? "var(--primary)" : "var(--surface)",
               color: input.trim() && !isStreaming ? "#fff" : "var(--text-3)",
               border: "none",
-              borderRadius: "var(--radius)",
+              borderRadius: "var(--radius-sm)",
               cursor: input.trim() && !isStreaming ? "pointer" : "not-allowed",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               flexShrink: 0,
               transition: "all 0.15s",
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
             </svg>
           </button>
         </div>
-
-        <p style={{ fontSize: 11, color: "var(--text-3)", textAlign: "center", marginTop: 8 }}>
-          PickleNickAI may produce inaccurate information. Always verify against official AC9 curriculum documents.
-        </p>
       </div>
     </div>
   );

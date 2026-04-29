@@ -71,7 +71,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             width: 56, height: 56, borderRadius: 16,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: 24, margin: "0 auto 1rem",
-          }}>🤖</div>
+            fontWeight: 900, color: "#fff",
+          }}>PN</div>
           <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>Welcome to PickleNickAI</h1>
           <p style={{ color: "var(--text2)", fontSize: 14 }}>Let's set up your personal AI teaching assistant.</p>
         </div>
@@ -204,7 +205,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         {/* Step 4 — Done */}
         {step === 4 && (
           <div style={{ textAlign: "center", padding: "1rem 0" }}>
-            <div style={{ fontSize: 48, marginBottom: "1rem" }}>✅</div>
+            <div style={{
+              background: "linear-gradient(135deg, #6366f1, #818cf8)",
+              width: 56, height: 56, borderRadius: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: 900, fontSize: 18, color: "#fff",
+              margin: "0 auto 1rem",
+              boxShadow: "0 0 20px rgba(99,102,241,0.3)",
+            }}>PN</div>
             <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>You're all set, {name}!</h2>
             <p style={{ color: "var(--text2)", fontSize: 14, lineHeight: 1.6 }}>
               Your AI teaching assistant is ready{state ? ` — ${state.replace(/\s*\([^)]+\)/, '')} Mode` : ''}. Ask me anything about lesson plans, assessments, behaviour strategies, differentiation, or the Australian curriculum.

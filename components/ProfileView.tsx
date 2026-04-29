@@ -10,13 +10,13 @@ interface SavedDoc { id: string; type: string; label: string; content: string; s
 interface ProfileData { name: string; yearLevels: string[]; subjects: string[]; focusAreas?: string[]; school?: string; }
 
 const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  lesson: { label: "Lesson Plan", icon: "📋", color: "#6366f1" },
-  rubric: { label: "Rubric", icon: "✅", color: "#16a34a" },
-  assessment: { label: "Assessment", icon: "🔍", color: "#ea580c" },
-  unit: { label: "Unit", icon: "📚", color: "#9333ea" },
-  worksheet: { label: "Worksheet", icon: "📝", color: "#f59e0b" },
-  writing: { label: "Writing Feedback", icon: "✍️", color: "#22d3ee" },
-  other: { label: "Document", icon: "📄", color: "#64748b" },
+  lesson: { label: "Lesson Plan", icon: "", color: "#6366f1" },
+  rubric: { label: "Rubric", icon: "", color: "#16a34a" },
+  assessment: { label: "Assessment", icon: "", color: "#ea580c" },
+  unit: { label: "Unit", icon: "", color: "#9333ea" },
+  worksheet: { label: "Worksheet", icon: "", color: "#f59e0b" },
+  writing: { label: "Writing Feedback", icon: "", color: "#22d3ee" },
+  other: { label: "Document", icon: "", color: "#64748b" },
 };
 
 function downloadDoc(doc: SavedDoc) {

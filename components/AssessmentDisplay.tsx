@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-interface AssessmentDisplayProps {
+interface AssessmentDisplayProps { compact?: boolean;
   content: string;
   onSave?: () => void;
   onDownloadTxt?: () => void;
@@ -41,7 +41,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AssessmentDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX }: AssessmentDisplayProps) {
+export default function AssessmentDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX, compact }: AssessmentDisplayProps) {
+  const cp = compact;
   const ac9Codes = content.match(/AC9\w{1,3}\d{1,2}-\d{2}/g) || [];
 
   const titleMatch = content.match(/^#\s+(.+?)\n/im);
@@ -60,11 +61,11 @@ export default function AssessmentDisplay({ content, onSave, onDownloadTxt, onDo
   const sc = scMatch ? scMatch[1].trim() : "";
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif", maxWidth: 820, margin: "0 auto" }}>
+    <div style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif", maxWidth: cp ? 340 : 820, margin: "0 auto" }}>
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", overflow: "hidden" }}>
 
         {/* HEADER */}
-        <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: "24px 28px 20px" }}>
+        <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: cp ? "12px 14px 10px" : "24px 28px 20px" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
             {onSave && <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>💾 Save</button>}
             {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📄 TXT</button>}
@@ -89,7 +90,7 @@ export default function AssessmentDisplay({ content, onSave, onDownloadTxt, onDo
         </div>
 
         {/* BODY */}
-        <div style={{ padding: "24px 28px" }}>
+        <div style={{ padding: cp ? "12px 14px" : "24px 28px" }}>
 
           {/* Cold Task */}
           {cold && (

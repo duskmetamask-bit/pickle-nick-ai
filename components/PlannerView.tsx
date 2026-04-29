@@ -137,11 +137,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function PhaseIcon({ name }: { name: string }) {
   const icons: Record<string, string> = {
-    "Hook": "🎯", "Tuning In": "🔔", "I Do": "👨‍🏫", "We Do": "👥", "You Do": "✏️",
-    "Plenary": "🏁", "Conclusion": "🎬", "Explicit Teaching": "📖", "Guided Practice": "🤝",
-    "Independent": "🏃", "Reflection": "💭",
+    "Hook": "H", "Tuning In": "T", "I Do": "1", "We Do": "2", "You Do": "3",
+    "Plenary": "P", "Conclusion": "C", "Explicit Teaching": "E", "Guided Practice": "G",
+    "Independent": "I", "Reflection": "R",
   };
-  return <span style={{ fontSize: 14 }}>{icons[name] || "📋"}</span>;
+  return <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>{icons[name] || "L"}</span>;
 }
 
 function LessonPlanDisplay({ content, onSave, onDownload }: { content: string; onSave?: () => void; onDownload?: (fmt: "txt" | "pdf" | "pptx" | "docx") => void }) {

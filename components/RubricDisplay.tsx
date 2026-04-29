@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-interface RubricDisplayProps {
+interface RubricDisplayProps { compact?: boolean;
   content: string;
   onSave?: () => void;
   onDownloadTxt?: () => void;
@@ -48,7 +48,8 @@ function AC9Pill({ code }: { code: string }) {
   );
 }
 
-export default function RubricDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX }: RubricDisplayProps) {
+export default function RubricDisplay({ content, onSave, onDownloadTxt, onDownloadPdf, onDownloadDOCX, compact }: RubricDisplayProps) {
+  const cp = compact;
   const lines = content.split("\n");
   let title = "Assessment Rubric";
 
@@ -90,11 +91,11 @@ export default function RubricDisplay({ content, onSave, onDownloadTxt, onDownlo
   const hasTable = headerRow && criteria.length > 0;
 
   return (
-    <div style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif", maxWidth: 820, margin: "0 auto" }}>
+    <div style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif", maxWidth: cp ? 340 : 820, margin: "0 auto" }}>
       <div style={{ background: "#fff", borderRadius: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", overflow: "hidden" }}>
 
         {/* HEADER */}
-        <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: "24px 28px 20px" }}>
+        <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", padding: cp ? "12px 14px 10px" : "24px 28px 20px" }}>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
             {onSave && <button onClick={onSave} data-save-btn style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>💾 Save</button>}
             {onDownloadTxt && <button onClick={onDownloadTxt} style={{ padding: "7px 16px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 24, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>📄 TXT</button>}
@@ -119,7 +120,7 @@ export default function RubricDisplay({ content, onSave, onDownloadTxt, onDownlo
         </div>
 
         {/* BODY */}
-        <div style={{ padding: "24px 28px" }}>
+        <div style={{ padding: cp ? "12px 14px" : "24px 28px" }}>
           {hasTable ? (
             <SectionCard accentColor="#6366f1">
               <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid #e0e7ff", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>

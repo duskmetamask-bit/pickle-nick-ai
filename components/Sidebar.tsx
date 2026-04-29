@@ -123,20 +123,20 @@ export default function Sidebar({ activeTab, onTabChange, profile, isPro = false
         </div>
         {/* Trust bar */}
         <div style={{
-          display: "flex", gap: 8, flexWrap: "wrap",
+          display: "flex", gap: 6, flexWrap: "wrap",
           marginTop: 10, padding: "8px 10px",
           background: "var(--surface-2)",
           borderRadius: 8,
           border: "1px solid var(--border-subtle)",
         }}>
-          {["🔒 Private", "✅ AC9 Aligned", "🌏 WA Reporting", "🎯 AITSL"].map(item => (
+          {["Private", "AC9 Aligned", "WA Reporting", "AITSL"].map(item => (
             <span key={item} style={{ fontSize: 10, color: "var(--text-2)", fontWeight: 600, whiteSpace: "nowrap" }}>{item}</span>
           ))}
         </div>
         {/* State badge */}
         {profile.state && (
           <div style={{ marginTop: 6, padding: "4px 10px", background: "var(--primary-dim)", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>🌏 {profile.state}</span>
+            <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>WA</span>
           </div>
         )}
       </div>
