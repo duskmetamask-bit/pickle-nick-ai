@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const FEATURES = [
@@ -94,7 +95,275 @@ const TESTIMONIALS = [
   { quote: "My lesson plans are better and I save 3+ hours per week. Game changer.", name: "Sofia M.", role: "Year 5 Teacher, QLD" },
 ];
 
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, visible };
+}
+
+function CountUp({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const { ref, visible } = useScrollReveal();
+
+  useEffect(() => {
+    if (!visible) return;
+    let start = 0;
+    const duration = 1200;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    }, 16);
+    return () => clearInterval(timer);
+  }, [visible, target]);
+
+  return (
+    <span ref={ref}>
+      {count}{suffix}
+    </span>
+  );
+}
+
+function FeatureSection() {
+  const { ref, visible } = useScrollReveal();
+  return (
+    <section
+      ref={ref}
+      style={{
+        borderTop: "1px solid var(--border-subtle)",
+        borderBottom: "1px solid var(--border-subtle)",
+        background: "var(--surface)",
+        padding: "100px 24px",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(20px)",
+        transition: "opacity 0.4s var(--ease), transform 0.4s var(--ease)",
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
+          <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 12 }}>
+            Everything a teacher needs
+          </h2>
+          <p style={{ fontSize: 16, color: "var(--text-2)" }}>
+            One AI. Six tools. Zero friction.
+          </p>
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: 20,
+        }}>
+          {FEATURES.map((f, i) => (
+            <div
+              key={f.title}
+              className="hover-lift"
+              style={{
+                background: "var(--bg)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-lg)",
+                padding: "28px",
+                cursor: "default",
+                opacity: visible ? 1 : 0,
+                transform: visible ? "translateY(0)" : "translateY(16px)",
+                transition: `opacity 0.3s var(--ease) ${i * 80}ms, transform 0.3s var(--ease) ${i * 80}ms, box-shadow 0.15s var(--ease)`,
+              }}
+            >
+              <div style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: "var(--primary-dim)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "var(--primary-hover)",
+                marginBottom: 18,
+              }}>
+                {f.icon}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 16 }}>{f.title}</h3>
+                <span style={{
+                  padding: "2px 8px", borderRadius: "var(--radius-full)",
+                  background: `${f.tagColor}18`, color: f.tagColor,
+                  fontSize: 11, fontWeight: 600,
+                }}>{f.tag}</span>
+              </div>
+              <p style={{ color: "var(--text-2)", fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  const { ref, visible } = useScrollReveal();
+  return (
+    <section
+      ref={ref}
+      id="how"
+      style={{
+        padding: "100px 24px",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(20px)",
+        transition: "opacity 0.4s var(--ease), transform 0.4s var(--ease)",
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+        {/* Left */}
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16 }}>
+            How it works
+          </p>
+          <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 40 }}>
+            From question to result<br/>in under 60 seconds
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            {HOW_STEPS.map((step, i) => (
+              <div
+                key={step.n}
+                style={{
+                  display: "flex", gap: 20,
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? "translateX(0)" : "translateX(-16px)",
+                  transition: `opacity 0.3s var(--ease) ${i * 100}ms, transform 0.3s var(--ease) ${i * 100}ms`,
+                }}
+              >
+                <div style={{
+                  width: 48, height: 48, borderRadius: 12,
+                  background: "var(--primary-dim)",
+                  border: "1px solid rgba(99,102,241,0.2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 800, fontSize: 14, color: "var(--primary-hover)",
+                  flexShrink: 0, fontFamily: "monospace",
+                }}>{step.n}</div>
+                <div>
+                  <h3 style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{step.title}</h3>
+                  <p style={{ color: "var(--text-2)", fontSize: 14, lineHeight: 1.6 }}>{step.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right — demo card */}
+        <div
+          className="hover-lift"
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-lg)",
+            padding: "28px",
+            boxShadow: "var(--shadow-xl)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171" }} />
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fbbf24" }} />
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399" }} />
+            <span style={{ fontSize: 12, color: "var(--text-3)", marginLeft: 6 }}>chat.picklenickai.com</span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--text-2)", border: "1px solid var(--border-subtle)" }}>
+              Write me a WALT, TIB and WILF for Year 4 Science — Energy transfers
+            </div>
+            <div style={{ padding: "12px 16px", background: "var(--primary-dim)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--text)" }}>
+              <p style={{ marginBottom: 8, fontWeight: 600 }}>Here&apos;s what I&apos;ll create for you:</p>
+              <p style={{ color: "var(--text-2)" }}><span style={{ color: "var(--primary-hover)", fontWeight: 600 }}>WALT:</span> Investigate how energy transfers through different forms...</p>
+              <p style={{ color: "var(--text-2)", marginTop: 4 }}><span style={{ color: "var(--primary-hover)", fontWeight: 600 }}>TIB:</span> Understanding energy helps us explain everyday phenomena...</p>
+              <p style={{ color: "var(--text-2)", marginTop: 4 }}><span style={{ color: "var(--primary-hover)", fontWeight: 600 }}>WILF:</span> Check boxes for explain 3 energy transfers, use scientific language, draw energy chain diagrams...</p>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+            <button style={{ padding: "6px 12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>Save</button>
+            <button style={{ padding: "6px 12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-2)", cursor: "pointer" }}>Copy</button>
+            <button style={{ padding: "6px 12px", background: "var(--primary-dim)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--primary-hover)", cursor: "pointer" }}>Export PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection() {
+  const { ref, visible } = useScrollReveal();
+  return (
+    <section
+      ref={ref}
+      style={{
+        borderTop: "1px solid var(--border-subtle)",
+        padding: "100px 24px",
+        background: "var(--surface)",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(20px)",
+        transition: "opacity 0.4s var(--ease), transform 0.4s var(--ease)",
+      }}
+    >
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", textAlign: "center", marginBottom: 48 }}>
+          Australian teachers love it
+        </h2>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: 20,
+        }}>
+          {TESTIMONIALS.map((t, i) => (
+            <div
+              key={t.name}
+              className="hover-lift"
+              style={{
+                background: "var(--bg)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-lg)",
+                padding: "28px",
+                opacity: visible ? 1 : 0,
+                transform: visible ? "translateY(0)" : "translateY(16px)",
+                transition: `opacity 0.3s var(--ease) ${i * 100}ms, transform 0.3s var(--ease) ${i * 100}ms, box-shadow 0.15s var(--ease)`,
+              }}
+            >
+              <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.6, marginBottom: 16, fontStyle: "italic" }}>&ldquo;{t.quote}&rdquo;</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: "linear-gradient(135deg, #6366f1, #22d3ee)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontWeight: 700, fontSize: 12, color: "#fff",
+                }}>{t.name.split(" ").map(n => n[0]).join("")}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>{t.role}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
+  const [heroVisible, setHeroVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger hero animation on mount
+    const timer = setTimeout(() => setHeroVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div style={{ background: "var(--bg)", color: "var(--text)", minHeight: "100vh" }}>
 
@@ -102,7 +371,7 @@ export default function Home() {
       <nav style={{
         position: "sticky", top: 0, zIndex: 100,
         borderBottom: "1px solid var(--border-subtle)",
-        background: "rgba(10,10,10,0.85)",
+        background: "rgba(var(--bg), 0.85)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
       }}>
@@ -125,9 +394,9 @@ export default function Home() {
 
           {/* Nav links */}
           <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
-            <span style={{ fontSize: 14, color: "var(--text-2)", display: "none" }}>Features</span>
-            <span style={{ fontSize: 14, color: "var(--text-2)", display: "none" }}>Pricing</span>
-            <span style={{ fontSize: 14, color: "var(--text-2)", display: "none" }}>Blog</span>
+            <a href="#features" style={{ fontSize: 14, color: "var(--text-2)", textDecoration: "none", transition: "color 0.15s" }}>Features</a>
+            <a href="#pricing" style={{ fontSize: 14, color: "var(--text-2)", textDecoration: "none", transition: "color 0.15s" }}>Pricing</a>
+            <a href="#how" style={{ fontSize: 14, color: "var(--text-2)", textDecoration: "none", transition: "color 0.15s" }}>How it works</a>
           </div>
 
           {/* CTA */}
@@ -140,6 +409,7 @@ export default function Home() {
               fontWeight: 700, fontSize: 14,
               transition: "all 0.15s",
               boxShadow: "0 0 0 0 rgba(99,102,241,0.4)",
+              textDecoration: "none",
             }}>Open App</Link>
           </div>
         </div>
@@ -150,6 +420,9 @@ export default function Home() {
         maxWidth: 1100, margin: "0 auto",
         padding: "100px 24px 80px",
         textAlign: "center",
+        opacity: heroVisible ? 1 : 0,
+        transform: heroVisible ? "translateY(0)" : "translateY(20px)",
+        transition: "opacity 0.5s var(--ease), transform 0.5s var(--ease)",
       }}>
         {/* Badge */}
         <div style={{
@@ -188,15 +461,20 @@ export default function Home() {
 
         {/* CTAs */}
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/picklenickai" style={{
-            padding: "14px 32px",
-            background: "var(--primary)",
-            color: "#fff", borderRadius: "var(--radius)",
-            fontWeight: 700, fontSize: 15,
-            display: "inline-flex", alignItems: "center", gap: 8,
-            boxShadow: "0 0 40px rgba(99,102,241,0.25)",
-            transition: "all 0.2s",
-          }}>
+          <Link
+            href="/picklenickai"
+            className="hero-cta"
+            style={{
+              padding: "14px 32px",
+              background: "var(--primary)",
+              color: "#fff", borderRadius: "var(--radius)",
+              fontWeight: 700, fontSize: 15,
+              display: "inline-flex", alignItems: "center", gap: 8,
+              boxShadow: "0 0 40px rgba(99,102,241,0.25)",
+              textDecoration: "none",
+              transition: "transform 0.2s var(--ease), box-shadow 0.2s var(--ease)",
+            }}
+          >
             Start free — it&apos;s instant
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </Link>
@@ -206,6 +484,8 @@ export default function Home() {
             color: "var(--text-2)", borderRadius: "var(--radius)",
             fontWeight: 600, fontSize: 15,
             border: "1px solid var(--border)",
+            textDecoration: "none",
+            transition: "all 0.15s",
           }}>
             See how it works
           </Link>
@@ -226,176 +506,26 @@ export default function Home() {
             ))}
           </div>
           <p style={{ fontSize: 13, color: "var(--text-3)" }}>
-            <span style={{ color: "var(--text-2)", fontWeight: 600 }}>840+</span> Australian teachers onboarded
+            <span style={{ color: "var(--text-2)", fontWeight: 600 }}>
+              <CountUp target={840} suffix="+" /> Australian teachers onboarded
+            </span>
           </p>
         </div>
       </section>
 
       {/* Feature grid */}
-      <section style={{
-        borderTop: "1px solid var(--border-subtle)",
-        borderBottom: "1px solid var(--border-subtle)",
-        background: "var(--surface)",
-        padding: "80px 24px",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 52 }}>
-            <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 12 }}>
-              Everything a teacher needs
-            </h2>
-            <p style={{ fontSize: 16, color: "var(--text-2)" }}>
-              One AI. Six tools. Zero friction.
-            </p>
-          </div>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: 16,
-          }}>
-            {FEATURES.map((f) => (
-              <div key={f.title} style={{
-                background: "var(--bg)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-lg)",
-                padding: "24px",
-                transition: "all 0.2s",
-                cursor: "default",
-              }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 10,
-                  background: "var(--primary-dim)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "var(--primary-hover)",
-                  marginBottom: 16,
-                }}>
-                  {f.icon}
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <h3 style={{ fontWeight: 700, fontSize: 16 }}>{f.title}</h3>
-                  <span style={{
-                    padding: "2px 8px", borderRadius: "var(--radius-full)",
-                    background: `${f.tagColor}18`, color: f.tagColor,
-                    fontSize: 11, fontWeight: 600,
-                  }}>{f.tag}</span>
-                </div>
-                <p style={{ color: "var(--text-2)", fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <div id="features">
+        <FeatureSection />
+      </div>
 
       {/* How it works */}
-      <section id="how" style={{ padding: "80px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
-          {/* Left */}
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16 }}>
-              How it works
-            </p>
-            <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 40 }}>
-              From question to result<br/>in under 60 seconds
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-              {HOW_STEPS.map((step) => (
-                <div key={step.n} style={{ display: "flex", gap: 20 }}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: 12,
-                    background: "var(--primary-dim)",
-                    border: "1px solid rgba(99,102,241,0.2)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 800, fontSize: 14, color: "var(--primary-hover)",
-                    flexShrink: 0, fontFamily: "monospace",
-                  }}>{step.n}</div>
-                  <div>
-                    <h3 style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{step.title}</h3>
-                    <p style={{ color: "var(--text-2)", fontSize: 14, lineHeight: 1.6 }}>{step.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — demo card */}
-          <div style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-lg)",
-            padding: "28px",
-            boxShadow: "0 0 60px rgba(0,0,0,0.5), 0 0 120px rgba(99,102,241,0.06)",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f87171" }} />
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fbbf24" }} />
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399" }} />
-              <span style={{ fontSize: 12, color: "var(--text-3)", marginLeft: 6 }}>chat.picklenickai.com</span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--text-2)", border: "1px solid var(--border-subtle)" }}>
-                Write me a WALT, TIB and WILF for Year 4 Science — Energy transfers
-              </div>
-              <div style={{ padding: "12px 16px", background: "var(--primary-dim)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: "var(--radius)", fontSize: 13, color: "var(--text)" }}>
-                <p style={{ marginBottom: 8, fontWeight: 600 }}>Here&apos;s what I&apos;ll create for you:</p>
-                <p style={{ color: "var(--text-2)" }}><span style={{ color: "var(--primary-hover)", fontWeight: 600 }}>WALT:</span> Investigate how energy transfers through different forms...</p>
-                <p style={{ color: "var(--text-2)", marginTop: 4 }}><span style={{ color: "var(--primary-hover)", fontWeight: 600 }}>TIB:</span> Understanding energy helps us explain everyday phenomena...</p>
-                <p style={{ color: "var(--text-2)", marginTop: 4 }}><span style={{ color: "var(--primary-hover)", fontWeight: 600 }}>WILF:</span> ☐ Explain 3 energy transfers ☐ Use scientific language ☐ Draw energy chain diagrams...</p>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-              <button style={{ padding: "6px 12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-2)" }}>Save</button>
-              <button style={{ padding: "6px 12px", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--text-2)" }}>Copy</button>
-              <button style={{ padding: "6px 12px", background: "var(--primary-dim)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: "var(--radius-sm)", fontSize: 12, color: "var(--primary-hover)" }}>Export PDF</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* Testimonials */}
-      <section style={{
-        borderTop: "1px solid var(--border-subtle)",
-        padding: "80px 24px",
-        background: "var(--surface)",
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", textAlign: "center", marginBottom: 48 }}>
-            Australian teachers love it
-          </h2>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 16,
-          }}>
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} style={{
-                background: "var(--bg)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: "var(--radius-lg)",
-                padding: "24px",
-              }}>
-                <p style={{ fontSize: 15, color: "var(--text)", lineHeight: 1.6, marginBottom: 16, fontStyle: "italic" }}>&ldquo;{t.quote}&rdquo;</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: "50%",
-                    background: "linear-gradient(135deg, #6366f1, #22d3ee)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 700, fontSize: 12, color: "#fff",
-                  }}>{t.name.split(" ").map(n => n[0]).join("")}</div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-3)" }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TestimonialsSection />
 
       {/* Pricing teaser */}
-      <section style={{ padding: "80px 24px", textAlign: "center" }}>
+      <section id="pricing" style={{ padding: "100px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 560, margin: "0 auto" }}>
           <h2 style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 12 }}>
             Simple pricing
@@ -409,7 +539,7 @@ export default function Home() {
             background: "var(--surface)",
             border: "1px solid var(--border)",
             borderRadius: "var(--radius-lg)",
-            boxShadow: "0 0 60px rgba(99,102,241,0.08)",
+            boxShadow: "var(--shadow-lg)",
           }}>
             <span style={{ fontSize: 48, fontWeight: 900, letterSpacing: "-0.04em" }}>$19</span>
             <span style={{ fontSize: 16, color: "var(--text-2)" }}>/month per teacher</span>
@@ -441,6 +571,14 @@ export default function Home() {
           <p style={{ fontSize: 12, color: "var(--text-3)" }}>© 2025 PickleNickAI. Built for Australian teachers.</p>
         </div>
       </footer>
+
+      <style>{`
+        .hero-cta:hover {
+          transform: scale(1.02);
+          box-shadow: 0 0 60px rgba(99,102,241,0.4);
+        }
+        a:hover { color: var(--text) !important; }
+      `}</style>
     </div>
   );
 }

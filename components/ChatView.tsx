@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import LessonPlanDisplay from "./LessonPlanDisplay";
@@ -19,20 +19,77 @@ const QUICK_PROMPTS = [
   { label: "Differentiation", prompt: "Help me differentiate this lesson for..." },
 ];
 
-function isStructuredContent(content: string): boolean {
-  const indicators = ["WALT", "TIB", "WILF", "Lesson Plan", "Assessment", "Rubric", "Learning Intention", "Success Criteria", "AC9", "Hot Task", "Cold Task", "Exit Ticket", "Phase | Duration"];
-  return indicators.some(ind => content.includes(ind));
+// ─── Smart Suggestions ─────────────────────────────────────────────
+const SUGGESTION_RULES: { keywords: string[]; label: string; fill: string }[] = [
+  { keywords: ["lesson plan", "walt", "tib", "walf", "lesson"],
+    label: "Generate lesson plan", fill: "Write a complete lesson plan with WALT, TIB and WILF for" },
+  { keywords: ["rubric", "assessment criteria", "marking criteria"],
+    label: "Create rubric", fill: "Create an assessment rubric for" },
+  { keywords: ["behaviour", "bsp", "behaviour support", "de-escalate"],
+    label: "Behaviour support plan", fill: "Create a behaviour support plan for a Year" },
+  { keywords: ["report comment", "report", "parent report"],
+    label: "Write report comment", fill: "Write a report comment for a Year" },
+  { keywords: ["differentiate", "eal", "gifted", "additional needs", "differentiation"],
+    label: "Differentiate content", fill: "Differentiate this lesson for EAL/D learners," },
+  { keywords: ["email parent", "parent email", "contact parent"],
+    label: "Write parent email", fill: "Write a professional parent email about" },
+  { keywords: ["ac9", "australian curriculum", "curriculum code"],
+    label: "Look up AC9 codes", fill: "What are the AC9 codes for Year" },
+  { keywords: ["worksheet", "activity", "task"],
+    label: "Generate worksheet", fill: "Create a worksheet for" },
+  { keywords: ["exit ticket", "exit pass", " AFL"],
+    label: "Create exit ticket", fill: "Create an exit ticket for Year" },
+  { keywords: ["cold task", "hot task", "pre-assessment", "post-assessment"],
+    label: "Design assessment", fill: "Design a cold task and hot task for Year" },
+];
+
+function getSmartSuggestions(input: string): { label: string; fill: string }[] {
+  if (input.length < 2) return [];
+  const lower = input.toLowerCase();
+  const matched: { label: string; fill: string }[] = [];
+  for (const rule of SUGGESTION_RULES) {
+    if (rule.keywords.some(k => lower.includes(k)) && !matched.find(m => m.label === rule.label)) {
+      matched.push({ label: rule.label, fill: rule.fill });
+    }
+  }
+  return matched.slice(0, 3);
 }
 
-function getContentType(content: string): string {
-  if ((content.includes("WALT") || content.includes("Lesson Plan")) && (content.includes("Phase") || content.includes("Duration") || content.includes("Teacher Does"))) return "lesson";
-  if (content.includes("Rubric") && content.includes("Excellent")) return "rubric";
-  if (content.includes("Cold Task") || content.includes("Hot Task")) return "assessment";
-  if (content.includes("Writing Feedback") || (content.includes("Strengths") && content.includes("Areas to Develop"))) return "feedback";
-  if (content.includes("WALT") || content.includes("Lesson Plan")) return "lesson";
-  return "other";
+// ─── Image Upload ───────────────────────────────────────────────────
+interface ImageUploadState {
+  file: File | null;
+  preview: string;
+  base64: string;
 }
 
+function useImageUpload() {
+  const [image, setImage] = useState<ImageUploadState | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be under 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = (ev.target?.result as string).split(",")[1] || "";
+      setImage({ file, preview: ev.target?.result as string, base64 });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage() {
+    setImage(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  return { image, inputRef, handleFileChange, removeImage };
+}
+
+// ─── Download helpers ───────────────────────────────────────────────
 function downloadTxt(content: string, label: string) {
   const blob = new Blob([content], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -77,13 +134,44 @@ async function downloadDOCX(content: string, label: string) {
   }
 }
 
+// ─── Content detection ─────────────────────────────────────────────
+function isStructuredContent(content: string): boolean {
+  const indicators = ["WALT", "TIB", "WILF", "Lesson Plan", "Assessment", "Rubric", "Learning Intention", "Success Criteria", "AC9", "Hot Task", "Cold Task", "Exit Ticket", "Phase | Duration"];
+  return indicators.some(ind => content.includes(ind));
+}
+
+function getContentType(content: string): string {
+  if ((content.includes("WALT") || content.includes("Lesson Plan")) && (content.includes("Phase") || content.includes("Duration") || content.includes("Teacher Does"))) return "lesson";
+  if (content.includes("Rubric") && content.includes("Excellent")) return "rubric";
+  if (content.includes("Cold Task") || content.includes("Hot Task")) return "assessment";
+  if (content.includes("Writing Feedback") || (content.includes("Strengths") && content.includes("Areas to Develop"))) return "feedback";
+  if (content.includes("WALT") || content.includes("Lesson Plan")) return "lesson";
+  return "other";
+}
+
+// ─── Main component ─────────────────────────────────────────────────
 export default function ChatView({ profile }: { profile: Profile }) {
-  const initialMessage = `Hi ${profile.name}! I'm PickleNickAI — your teaching colleague who never sleeps.\n\nAsk me anything a knowledgeable teacher would know:\n• Lesson plans, unit outlines, worksheets\n• Behaviour support, de-escalation, wellbeing strategies\n• Rubrics, assessment tasks, feedback\n• Parent emails, report comments, communications\n• AC9 codes, curriculum alignment, scope & sequence\n• WA mandatory reporting, AITSL standards, state requirements\n• Differentiation for EAL/D, Gifted, Additional Needs\n\nWhat can I help you with today?`;
+  const initialMessage = `Hi ${profile.name}! I'm PickleNickAI — your teaching colleague who never sleeps.
+
+Ask me anything a knowledgeable teacher would know:
+• Lesson plans, unit outlines, worksheets
+• Behaviour support, de-escalation, wellbeing strategies
+• Rubrics, assessment tasks, feedback
+• Parent emails, report comments, communications
+• AC9 codes, curriculum alignment, scope & sequence
+• WA mandatory reporting, AITSL standards, state requirements
+• Differentiation for EAL/D, Gifted, Additional Needs
+
+What can I help you with today?`;
+
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [showChips, setShowChips] = useState(true);
+  const [suggestions, setSuggestions] = useState<{ label: string; fill: string }[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { image, inputRef: imageInputRef, handleFileChange, removeImage } = useImageUpload();
+
   const [sessionId] = useState(() => {
     if (typeof window !== "undefined") {
       let id = localStorage.getItem("pn-chat-session");
@@ -98,15 +186,33 @@ export default function ChatView({ profile }: { profile: Profile }) {
     content: initialMessage,
   }]);
 
+  // Smart suggestions debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSuggestions(getSmartSuggestions(input));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [input]);
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  function fillSuggestion(fill: string) {
+    setInput(fill + " ");
+    textareaRef.current?.focus();
+    setSuggestions([]);
+  }
 
   function send(text?: string) {
     const textToSend = (text ?? input).trim();
-    if (!textToSend || isStreaming) return;
+    if (!textToSend && !image) return;
 
     const userMsg: Message = { role: "user", content: textToSend };
     setMessages(m => [...m, userMsg]);
     if (!text) setInput("");
+    setShowChips(false);
+    setSuggestions([]);
+    const imageBase64 = image?.base64 || undefined;
+    if (!text) removeImage();
 
     const assistantMsg: Message = { role: "assistant", content: "", streaming: true };
     setMessages(m => [...m, assistantMsg]);
@@ -117,7 +223,7 @@ export default function ChatView({ profile }: { profile: Profile }) {
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [...messages, userMsg], sessionId, profile }),
+      body: JSON.stringify({ messages: [...messages, userMsg], sessionId, profile, imageBase64 }),
       signal: controller.signal,
     })
       .then(res => {
@@ -324,7 +430,7 @@ export default function ChatView({ profile }: { profile: Profile }) {
                 {/* Action bar for structured content */}
                 {msg.contentType && !msg.streaming && msg.role === "assistant" && (
                   <div style={{
-                    display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap",
+                    display: "flex", gap: 6, flexWrap: "wrap",
                   }}>
                     {[
                       { label: "Copy", action: () => navigator.clipboard.writeText(msg.content) },
@@ -396,16 +502,36 @@ export default function ChatView({ profile }: { profile: Profile }) {
                 cursor: "pointer",
                 transition: "all 0.12s",
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = "var(--surface-2)";
-                e.currentTarget.style.color = "var(--text)";
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = "var(--surface)";
-                e.currentTarget.style.color = "var(--text-2)";
-              }}
             >
               {q.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Smart Suggestions */}
+      {suggestions.length > 0 && (
+        <div style={{
+          padding: "0 24px 8px",
+          display: "flex", gap: 8, flexWrap: "wrap",
+          animation: "fade-in 0.15s var(--ease)",
+        }}>
+          {suggestions.map(s => (
+            <button
+              key={s.label}
+              onClick={() => fillSuggestion(s.fill)}
+              style={{
+                padding: "6px 12px",
+                background: "var(--surface)",
+                border: "1px solid var(--primary)",
+                borderRadius: "var(--radius-full)",
+                fontSize: 12, color: "var(--primary)",
+                cursor: "pointer",
+                transition: "all 0.12s",
+                fontWeight: 500,
+              }}
+            >
+              {s.label}
             </button>
           ))}
         </div>
@@ -417,6 +543,35 @@ export default function ChatView({ profile }: { profile: Profile }) {
         borderTop: "1px solid var(--border-subtle)",
         background: "var(--bg)",
       }}>
+        {/* Image preview */}
+        {image && (
+          <div style={{ marginBottom: 10, position: "relative", display: "inline-block" }}>
+            <img
+              src={image.preview}
+              alt="Upload preview"
+              style={{
+                height: 72, width: "auto",
+                borderRadius: "var(--radius)",
+                border: "1px solid var(--border)",
+                maxWidth: "100%",
+              }}
+            />
+            <button
+              onClick={removeImage}
+              style={{
+                position: "absolute", top: -6, right: -6,
+                width: 20, height: 20, borderRadius: "50%",
+                background: "var(--danger)", border: "none",
+                color: "#fff", fontSize: 10, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "var(--shadow-sm)",
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        )}
+
         <div style={{
           display: "flex", gap: 10, alignItems: "flex-end",
           background: "var(--surface)",
@@ -425,6 +580,32 @@ export default function ChatView({ profile }: { profile: Profile }) {
           padding: "6px 6px 6px 16px",
           transition: "border-color 0.15s",
         }}>
+          {/* Paperclip for image upload */}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            title="Upload image"
+            style={{
+              background: "none", border: "none",
+              color: image ? "var(--primary)" : "var(--text-3)",
+              cursor: "pointer",
+              display: "flex", alignItems: "center",
+              padding: "4px",
+              flexShrink: 0,
+              transition: "color 0.15s",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </button>
+
           <textarea
             ref={textareaRef}
             value={input}
@@ -454,14 +635,14 @@ export default function ChatView({ profile }: { profile: Profile }) {
           />
           <button
             onClick={() => send()}
-            disabled={!input.trim() || isStreaming}
+            disabled={(!input.trim() && !image) || isStreaming}
             style={{
               width: 38, height: 38,
-              background: input.trim() && !isStreaming ? "var(--primary)" : "var(--surface-2)",
-              color: input.trim() && !isStreaming ? "#fff" : "var(--text-3)",
+              background: input.trim() || image ? "var(--primary)" : "var(--surface-2)",
+              color: input.trim() || image ? "#fff" : "var(--text-3)",
               border: "none",
               borderRadius: "var(--radius)",
-              cursor: input.trim() && !isStreaming ? "pointer" : "not-allowed",
+              cursor: input.trim() || image ? "pointer" : "not-allowed",
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
               transition: "all 0.15s",

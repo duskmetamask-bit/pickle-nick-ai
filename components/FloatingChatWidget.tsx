@@ -172,6 +172,84 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
     return "";
   });
 
+  // Voice mode
+  const [voiceState, setVoiceState] = useState<"idle" | "listening" | "processing" | "done">("idle");
+  const [transcript, setTranscript] = useState("");
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition || window.SpeechRecognition;
+    if (SpeechRecognition) {
+      setIsVoiceSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-AU";
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let final = "";
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const r = event.results[i];
+          if (r.isFinal) final += r[0].transcript;
+          else interim += r[0].transcript;
+        }
+        setTranscript(final + interim);
+      };
+      recognition.onend = () => {
+        setVoiceState(prev => prev === "listening" ? "done" : prev);
+        setIsRecording(false);
+      };
+      recognition.onerror = () => {
+        setVoiceState("idle");
+        setIsRecording(false);
+        setTranscript("");
+      };
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  function startVoice() {
+    if (!recognitionRef.current || isRecording) return;
+    setTranscript("");
+    setVoiceState("listening");
+    setIsRecording(true);
+    try { recognitionRef.current.start(); } catch { /* already started */ }
+  }
+
+  function stopVoice() {
+    if (!recognitionRef.current) return;
+    recognitionRef.current.stop();
+    setVoiceState("processing");
+    setIsRecording(false);
+  }
+
+  // Listen for external voice activation
+  useEffect(() => {
+    const handler = () => startVoice();
+    window.addEventListener("pn-activate-voice", handler);
+    return () => window.removeEventListener("pn-activate-voice", handler);
+  }, [isRecording]);
+
+  function handleGeneratePlan() {
+    if (transcript.trim()) {
+      send(transcript);
+      setVoiceState("idle");
+      setTranscript("");
+    }
+  }
+
+  // ── Voice icon SVG ────────────────────────────────────────────
+  const MicIcon = ({ size = 16 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+      <line x1="12" y1="19" x2="12" y2="23"/>
+      <line x1="8" y1="23" x2="16" y2="23"/>
+    </svg>
+  );
+
   const initialMessage = `Hi ${profile.name}! I'm PickleNickAI — ask me anything about lesson plans, rubrics, behaviour support, AC9 codes, and more.`;
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
@@ -650,6 +728,82 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
         </div>
       )}
 
+      {/* Voice Mode UI */}
+      {voiceState !== "idle" && (
+        <div style={{
+          padding: "10px 12px 8px",
+          borderTop: "1px solid var(--border-subtle)",
+          background: "var(--surface)",
+          flexShrink: 0,
+          animation: "fade-in 0.15s var(--ease)",
+        }}>
+          {voiceState === "listening" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 10, height: 10, borderRadius: "50%",
+                  background: "var(--primary)",
+                  animation: "pulse-dot 1s ease-in-out infinite",
+                }} />
+                <span style={{ fontSize: 12, color: "var(--primary)", fontWeight: 600 }}>Listening...</span>
+                <button
+                  onClick={stopVoice}
+                  style={{
+                    marginLeft: "auto",
+                    padding: "4px 10px",
+                    background: "var(--danger)",
+                    color: "#fff", border: "none",
+                    borderRadius: "var(--radius-sm)",
+                    fontSize: 11, cursor: "pointer",
+                  }}
+                >
+                  Stop
+                </button>
+              </div>
+              {transcript && (
+                <div style={{
+                  padding: "8px 10px",
+                  background: "var(--primary-dim)",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: 12, color: "var(--text)",
+                  fontStyle: "italic",
+                  lineHeight: 1.5,
+                }}>
+                  {transcript}
+                </div>
+              )}
+            </div>
+          )}
+          {voiceState === "done" && transcript && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{
+                padding: "8px 10px",
+                background: "var(--surface-2)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: 12, color: "var(--text)",
+                lineHeight: 1.5,
+              }}>
+                {transcript}
+              </div>
+              <button
+                onClick={handleGeneratePlan}
+                style={{
+                  padding: "8px 16px",
+                  background: "var(--primary)",
+                  color: "#fff", border: "none",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: 12, fontWeight: 600,
+                  cursor: "pointer",
+                  alignSelf: "flex-start",
+                }}
+              >
+                Generate Plan
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Input */}
       <div style={{
         padding: "10px 12px 12px",
@@ -666,6 +820,43 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
           borderRadius: "var(--radius)",
           padding: "5px 5px 5px 12px",
         }}>
+          {/* Voice mic button */}
+          {isVoiceSupported ? (
+            <button
+              onClick={isRecording ? stopVoice : startVoice}
+              title={voiceState === "idle" ? "Start voice" : "Stop recording"}
+              style={{
+                width: 28, height: 28,
+                borderRadius: "50%",
+                background: isRecording ? "var(--danger)" : voiceState !== "idle" ? "var(--primary)" : "var(--surface-2)",
+                border: `1px solid ${isRecording ? "var(--danger)" : "var(--border)"}`,
+                color: isRecording ? "#fff" : voiceState !== "idle" ? "#fff" : "var(--text-3)",
+                cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+                transition: "all 0.15s",
+                position: "relative",
+              }}
+            >
+              <MicIcon size={13} />
+              {/* Pulsing ring when listening */}
+              {isRecording && (
+                <div style={{
+                  position: "absolute",
+                  inset: -4,
+                  borderRadius: "50%",
+                  border: "2px solid rgba(239,68,68,0.4)",
+                  animation: "pulse-ring 1.5s ease-out infinite",
+                  pointerEvents: "none",
+                }} />
+              )}
+            </button>
+          ) : (
+            <div title="Voice not supported" style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: 0.3 }}>
+              <MicIcon size={13} />
+            </div>
+          )}
+
           <textarea
             ref={textareaRef}
             value={input}
@@ -676,7 +867,7 @@ export default function FloatingChatWidget({ profile, initialCollapsed = true }:
                 send();
               }
             }}
-            placeholder="Ask me anything..."
+            placeholder={isRecording ? "Listening..." : "Ask me anything..."}
             disabled={isStreaming}
             rows={1}
             style={{

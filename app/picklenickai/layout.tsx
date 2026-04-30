@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Onboarding from "@/components/Onboarding";
 import Sidebar from "@/components/Sidebar";
 import FloatingChatWidget from "@/components/FloatingChatWidget";
+import CommandMenu from "@/components/CommandMenu";
+import DifferentiateView from "@/components/DifferentiateView";
 import LibraryView from "@/components/LibraryView";
 import PlannerView from "@/components/PlannerView";
 import RubricView from "@/components/RubricView";
@@ -12,6 +14,7 @@ import CurriculumView from "@/components/CurriculumView";
 import ProfileView from "@/components/ProfileView";
 import WritingFeedbackView from "@/components/WritingFeedbackView";
 import WorksheetView from "@/components/WorksheetView";
+import ChatView from "@/components/ChatView";
 
 interface TeacherProfile {
   name: string;
@@ -22,14 +25,42 @@ interface TeacherProfile {
   state?: string;
 }
 
-type Tab = "chat" | "library" | "planner" | "rubric" | "automark" | "curriculum" | "profile" | "writing" | "worksheet";
+type Tab = "chat" | "library" | "planner" | "rubric" | "automark" | "curriculum" | "profile" | "writing" | "worksheet" | "differentiate";
+
+// ─── Theme ─────────────────────────────────────────────────────────
+function useTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("pn-theme");
+    if (saved === "dark" || saved === "light") {
+      setTheme(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    localStorage.setItem("pn-theme", next);
+    document.documentElement.setAttribute("data-theme", next);
+  }, [theme]);
+
+  return { theme, toggleTheme };
+}
 
 // ─── Social Proof Banner ───────────────────────────────────────────
-function SocialProofBanner() {
+function SocialProofBanner({ theme }: { theme: string }) {
   return (
     <div style={{
-      background: "linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(34,211,238,0.06) 100%)",
-      borderBottom: "1px solid rgba(99,102,241,0.12)",
+      background: theme === "dark"
+        ? "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(34,211,238,0.06) 100%)"
+        : "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(34,211,238,0.04) 100%)",
+      borderBottom: "1px solid var(--border-subtle)",
       padding: "10px 28px",
       display: "flex",
       gap: 20,
@@ -63,7 +94,13 @@ function Testimonials() {
       </h3>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
         {testimonials.map((t, i) => (
-          <div key={i} style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 14, padding: "1.1rem" }}>
+          <div key={i} style={{
+            background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 14, padding: "1.1rem",
+            transition: "all 0.15s var(--ease)",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--shadow-lg)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+          >
             <div style={{ fontSize: 22, marginBottom: 8 }}>"</div>
             <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6, marginBottom: 10, fontStyle: "italic" }}>{t.text}</p>
             <div style={{ fontWeight: 700, fontSize: 12, color: "var(--primary)" }}>{t.name}</div>
@@ -83,6 +120,7 @@ function PricingModal({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: 
       background: "rgba(0,0,0,0.6)",
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: "1rem",
+      animation: "fade-in 0.15s var(--ease)",
     }}>
       <div style={{
         background: "var(--surface)",
@@ -91,16 +129,17 @@ function PricingModal({ onClose, onUpgrade }: { onClose: () => void; onUpgrade: 
         padding: "2rem 2.5rem",
         maxWidth: 480,
         width: "100%",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+        boxShadow: "var(--shadow-xl)",
+        animation: "slide-up 0.2s var(--ease)",
       }}>
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div style={{ fontSize: 40, marginBottom: "0.75rem" }}>Pro</div>
+          <div style={{ fontSize: 40, marginBottom: "0.75rem", fontFamily: "Georgia, serif" }}>Pro</div>
           <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 6 }}>Upgrade to Pro</h2>
           <p style={{ color: "var(--text-2)", fontSize: 13, lineHeight: 1.6 }}>
             You've used your 5 free lesson plans this month. Upgrade to Pro for unlimited access.
           </p>
         </div>
-        <div style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: "1.25rem", marginBottom: "1.25rem" }}>
+        <div style={{ background: "var(--primary-dim)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 16, padding: "1.25rem", marginBottom: "1.25rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div>
               <div style={{ fontWeight: 800, fontSize: 16 }}>Pro Plan</div>
@@ -176,9 +215,12 @@ function ChatWelcome({ profile }: { profile: TeacherProfile }) {
         ].map(card => (
           <div key={card.label} style={{
             background: "var(--surface-2)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "1rem", cursor: "pointer", transition: "all 0.15s",
-          }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(99,102,241,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, color: "var(--primary)" }}>{card.icon}</div>
+            borderRadius: 14, padding: "1rem", cursor: "pointer", transition: "all 0.15s var(--ease)",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--shadow-md)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-dim)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, color: "var(--primary)" }}>{card.icon}</div>
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 3 }}>{card.label}</div>
             <div style={{ fontSize: 11, color: "var(--text-3)" }}>{card.desc}</div>
           </div>
@@ -197,6 +239,9 @@ export default function AppLayout() {
   const [showPricing, setShowPricing] = useState(false);
   const [freeUses, setFreeUses] = useState(0);
   const [isPro, setIsPro] = useState(false);
+  const [cmdMenuOpen, setCmdMenuOpen] = useState(false);
+
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -209,6 +254,18 @@ export default function AppLayout() {
       setIsPro(pro);
       setLoading(false);
     }
+  }, []);
+
+  // Cmd+K keyboard shortcut
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdMenuOpen(o => !o);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   function handleOnboardingComplete(p: TeacherProfile) {
@@ -229,6 +286,10 @@ export default function AppLayout() {
       if (!allowed) { setShowPricing(true); return; }
     }
     setActiveTab(tab);
+  }
+
+  function handleNavigate(tab: string) {
+    handleTabChange(tab as Tab);
   }
 
   // Free tier event bus
@@ -260,7 +321,7 @@ export default function AppLayout() {
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 16px", fontWeight: 900, fontSize: 18, color: "#fff",
           }}>PN</div>
-          <p style={{ color: "var(--text2)", fontSize: 14 }}>Loading PickleNickAI...</p>
+          <p style={{ color: "var(--text-2)", fontSize: 14 }}>Loading PickleNickAI...</p>
         </div>
       </div>
     );
@@ -279,9 +340,12 @@ export default function AppLayout() {
         profile={profile}
         isPro={isPro}
         freeUses={freeUses}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onOpenCmdMenu={() => setCmdMenuOpen(true)}
       />
-      <main style={{ flex: 1, marginLeft: 220, overflowY: "auto" }}>
-        <SocialProofBanner />
+      <main style={{ flex: 1, marginLeft: 220, overflowY: "auto", transition: "opacity 0.25s var(--ease)" }}>
+        <SocialProofBanner theme={theme} />
         {activeTab === "chat" && <ChatWelcome profile={profile} />}
         {activeTab === "library" && <LibraryView />}
         {activeTab === "planner" && <PlannerView />}
@@ -291,9 +355,17 @@ export default function AppLayout() {
         {activeTab === "profile" && <ProfileView />}
         {activeTab === "writing" && <WritingFeedbackView />}
         {activeTab === "worksheet" && <WorksheetView />}
+        {activeTab === "differentiate" && <DifferentiateView />}
       </main>
 
       <FloatingChatWidget profile={profile} initialCollapsed={activeTab !== "chat"} />
+
+      <CommandMenu
+        isOpen={cmdMenuOpen}
+        onClose={() => setCmdMenuOpen(false)}
+        onNavigate={handleNavigate}
+        onUpgrade={() => { setCmdMenuOpen(false); setShowPricing(true); }}
+      />
     </div>
   );
 }
