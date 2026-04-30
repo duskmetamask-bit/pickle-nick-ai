@@ -116,6 +116,24 @@ async function downloadPdf(content: string, label: string) {
   }
 }
 
+async function downloadPPTX(content: string, label: string) {
+  try {
+    const res = await fetch("/api/export/pptx", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, title: label }),
+    });
+    if (!res.ok) throw new Error("PPTX generation failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url;
+    a.download = `${label}_${new Date().toISOString().slice(0, 10)}.pptx`; a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    alert("PPTX export failed");
+  }
+}
+
 async function downloadDOCX(content: string, label: string) {
   try {
     const res = await fetch("/api/export/docx", {
@@ -435,6 +453,7 @@ What can I help you with today?`;
                     {[
                       { label: "Copy", action: () => navigator.clipboard.writeText(msg.content) },
                       { label: "PDF", action: () => downloadPdf(msg.content, msg.contentType || "content") },
+                      { label: "PPTX", action: () => downloadPPTX(msg.content, msg.contentType || "content") },
                       { label: "TXT", action: () => downloadTxt(msg.content, msg.contentType || "content") },
                       { label: "DOCX", action: () => downloadDOCX(msg.content, msg.contentType || "content") },
                     ].map(btn => (
