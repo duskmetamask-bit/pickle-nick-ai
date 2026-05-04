@@ -12,7 +12,14 @@ function getStripe() {
   });
 }
 
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+// Lazy init — only created when webhook is actually called
+let _convex: ConvexHttpClient | null = null;
+function getConvex() {
+  if (!_convex) {
+    _convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+  }
+  return _convex;
+}
 
 // Map Stripe subscription statuses to our enum
 function mapSubscriptionStatus(status: string): "free" | "active" | "cancelled" | "past_due" {
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (convex as any).mutation((api as any).teachers.updateSubscription, {
+        await (getConvex() as any).mutation((api as any).teachers.updateSubscription, {
           teacherClerkUserId,
           stripeCustomerId: customerId,
           stripeSubscriptionId: subscriptionId,
@@ -82,7 +89,7 @@ export async function POST(req: Request) {
         const customerId = subscription.customer as string;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (convex as any).mutation((api as any).teachers.cancelSubscription, {
+        await (getConvex() as any).mutation((api as any).teachers.cancelSubscription, {
           stripeCustomerId: customerId,
         });
 
@@ -95,7 +102,7 @@ export async function POST(req: Request) {
         const customerId = subscription.customer as string;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (convex as any).mutation((api as any).teachers.updateSubscriptionStatus, {
+        await (getConvex() as any).mutation((api as any).teachers.updateSubscriptionStatus, {
           stripeCustomerId: customerId,
           subscriptionStatus: mapSubscriptionStatus(subscription.status),
         });
