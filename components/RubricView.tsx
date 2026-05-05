@@ -66,19 +66,21 @@ export default function RubricView() {
       a.download = `Rubric_${subject}_${yearLevel}_${taskType}.txt`; a.click();
       URL.revokeObjectURL(url);
     } else {
-      fetch(`/api/export/${format}`, {
+      const endpoint = format === "pdf" ? "chat-to-pdf" : format;
+      fetch(`/api/export/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: result, title: `Rubric_${subject}_${yearLevel}_${taskType}` }),
       })
-        .then(res => { if (!res.ok) throw new Error("Export failed"); return res.blob(); })
+        .then(res => { if (!res.ok) throw new Error(`${format.toUpperCase()} export failed`); return res.blob(); })
         .then(blob => {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a"); a.href = url;
-          a.download = `Rubric_${subject}_${yearLevel}_${taskType}.${format}`; a.click();
+          a.download = `Rubric_${subject}_${yearLevel}_${taskType}.${format === "docx" ? "docx" : format === "pptx" ? "pptx" : "pdf"}`; a.click();
           URL.revokeObjectURL(url);
         })
-        .catch(() => {
+        .catch((err) => {
+          alert(err instanceof Error ? err.message : "Export failed — try TXT instead");
           const blob = new Blob([result], { type: "text/plain" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a"); a.href = url;

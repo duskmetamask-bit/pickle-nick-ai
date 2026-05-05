@@ -796,19 +796,21 @@ export default function PlannerView() {
       a.download = `LessonPlan_${subject}_${yearLevel}_${topic.slice(0, 20)}.txt`; a.click();
       URL.revokeObjectURL(url);
     } else {
-      fetch(`/api/export/${format}`, {
+      const endpoint = format === "pdf" ? "chat-to-pdf" : format;
+      fetch(`/api/export/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: text, title: `LessonPlan_${subject}_${yearLevel}` }),
       })
-        .then(res => { if (!res.ok) throw new Error("Export failed"); return res.blob(); })
+        .then(res => { if (!res.ok) throw new Error(`${format.toUpperCase()} export failed`); return res.blob(); })
         .then(blob => {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a"); a.href = url;
-          a.download = `LessonPlan_${subject}_${yearLevel}_${topic.slice(0, 20)}.${format}`; a.click();
+          a.download = `LessonPlan_${subject}_${yearLevel}_${topic.slice(0, 20)}.${format === "docx" ? "docx" : format === "pptx" ? "pptx" : "pdf"}`; a.click();
           URL.revokeObjectURL(url);
         })
-        .catch(() => {
+        .catch((err) => {
+          alert(err instanceof Error ? err.message : "Export failed — try TXT instead");
           const blob = new Blob([text], { type: "text/plain" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a"); a.href = url;
@@ -913,7 +915,11 @@ export default function PlannerView() {
                   wordBreak: "break-word",
                 }}>
                   {msg.role === "assistant" && !msg.streaming && isStructuredContent(msg.content) ? (
-                    <LessonPlanDisplay content={msg.content} onSave={() => savePlanToProfile(msg.content, "Chat Lesson Plan")} />
+                    <LessonPlanDisplay
+                      content={msg.content}
+                      onSave={() => savePlanToProfile(msg.content, "Chat Lesson Plan")}
+                      onDownload={(fmt) => download(fmt)}
+                    />
                   ) : (
                     <>{msg.content}{msg.streaming && <span style={{ opacity: 0.5 }}>▍</span>}</>
                   )}

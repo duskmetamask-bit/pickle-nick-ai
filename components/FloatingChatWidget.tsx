@@ -6,6 +6,7 @@ import LessonPlanDisplay from "./LessonPlanDisplay";
 import RubricDisplay from "./RubricDisplay";
 import AssessmentDisplay from "./AssessmentDisplay";
 import WritingFeedbackDisplay from "./WritingFeedbackDisplay";
+import { downloadPdf, downloadDOCX, downloadPPTX } from "./exportUtils";
 
 interface Message { role: "user" | "assistant"; content: string; streaming?: boolean; contentType?: string | null; }
 interface Profile { name: string; yearLevels: string[]; subjects: string[]; focusAreas?: string[]; school?: string; }
@@ -37,42 +38,6 @@ function downloadTxt(content: string, label: string) {
   const a = document.createElement("a"); a.href = url;
   a.download = `${label}_${new Date().toISOString().slice(0, 10)}.txt`; a.click();
   URL.revokeObjectURL(url);
-}
-
-async function downloadPdf(content: string, label: string) {
-  try {
-    const res = await fetch("/api/export/chat-to-pdf", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, label }),
-    });
-    if (!res.ok) throw new Error("PDF generation failed");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url;
-    a.download = `${label}_${new Date().toISOString().slice(0, 10)}.pdf`; a.click();
-    URL.revokeObjectURL(url);
-  } catch {
-    alert("PDF export failed — try downloading as text instead");
-  }
-}
-
-async function downloadDOCX(content: string, label: string) {
-  try {
-    const res = await fetch("/api/export/docx", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, title: label }),
-    });
-    if (!res.ok) throw new Error("DOCX generation failed");
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url;
-    a.download = `${label}_${new Date().toISOString().slice(0, 10)}.docx`; a.click();
-    URL.revokeObjectURL(url);
-  } catch {
-    alert("DOCX export failed");
-  }
 }
 
 async function saveToGoogleDrive(fileName: string, content: string, mimeType: string = "application/vnd.google-apps.document"): Promise<string | null> {

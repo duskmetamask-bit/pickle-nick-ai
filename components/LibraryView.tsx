@@ -744,6 +744,7 @@ export default function LibraryView() {
                   <button onClick={() => saveChatUnit(lastAssistant.content)} data-save-btn style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>Save Unit</button>
                   <button onClick={() => exportChatUnitTxt(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>TXT</button>
                   <button onClick={() => exportChatUnitPdf(lastAssistant.content)} style={{ padding: "5px 12px", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>PDF</button>
+                  <button onClick={() => exportChatUnitDOCX(lastAssistant.content)} style={{ padding: "5px 12px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>DOCX</button>
                   <button onClick={() => exportChatUnitPPTX(lastAssistant.content)} style={{ padding: "5px 12px", background: "#22D3EE", color: "#0a0a0a", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>📑 PPTX</button>
                 </div>
               );

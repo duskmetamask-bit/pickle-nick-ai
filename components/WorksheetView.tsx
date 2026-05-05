@@ -55,7 +55,7 @@ export default function WorksheetView() {
     finally { setLoading(false); }
   }
 
-  function download(format: "txt" | "pdf" | "pptx") {
+  function download(format: "txt" | "pdf" | "pptx" | "docx") {
     if (!result) return;
     logUsage("worksheet", "export", `${format} ${subject} ${yearLevel} ${topic}`);
     if (format === "txt") {
@@ -65,7 +65,8 @@ export default function WorksheetView() {
       a.download = `Worksheet_${subject}_${yearLevel}_${topic.slice(0, 20)}.txt`; a.click();
       URL.revokeObjectURL(url);
     } else {
-      fetch(`/api/export/${format}`, {
+      const endpoint = format === "pdf" ? "chat-to-pdf" : format;
+      fetch(`/api/export/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: result, title: `Worksheet_${subject}_${yearLevel}_${topic.slice(0, 20)}` }),
@@ -199,6 +200,7 @@ export default function WorksheetView() {
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <button onClick={() => download("txt")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>TXT</button>
                 <button onClick={() => download("pdf")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>PDF</button>
+                <button onClick={() => download("docx")} style={{ padding: "6px 12px", background: "#4F46E5", color: "#fff", border: "none", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>DOCX</button>
                 <button onClick={() => download("pptx")} style={{ padding: "6px 12px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-sm)", fontSize: 12, fontWeight: 600, color: "var(--text-2)", cursor: "pointer" }}>📑 PPTX</button>
               </div>
             )}
