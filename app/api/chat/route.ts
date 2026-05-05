@@ -70,6 +70,13 @@ function loadAllSkills(): string {
     }
   });
 
+  // Sort: unit-planner first (it frames all planning requests), then alphabetical
+  skillDirs.sort((a, b) => {
+    if (a === "pickle-unit-planner") return -1;
+    if (b === "pickle-unit-planner") return 1;
+    return a.localeCompare(b);
+  });
+
   const contents: string[] = [];
   for (const dir of skillDirs) {
     const content = loadSkillContent(join(SKILLS_DIR, dir));

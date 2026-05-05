@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { callMiniMax } from "@/lib/ai";
 
 export const runtime = "nodejs";
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.NIM_API_KEY || "";
 
 const SYSTEM_PROMPT = `You are PickleNickAI — expert Australian F-6 teaching assistant with full AC9 knowledge.
 
@@ -76,49 +75,18 @@ export async function POST(req: NextRequest) {
 
     if (differentiate && originalPlan) {
       // Return differentiation versions
-      if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder") {
-        return NextResponse.json({
-          diffVersions: {
-            eal: "## EAL/ESL Version\n\nNote: OpenAI API key required for full differentiation. Add OPENAI_API_KEY to .env",
-            gifted: "## Extension/Gifted Version\n\nNote: OpenAI API key required for full differentiation.",
-            additional: "## Additional Needs Version\n\nNote: OpenAI API key required for full differentiation.",
-          },
-        });
-      }
+      const raw = await callMiniMax(
+        [
+          { role: "system", content: DIFF_SYSTEM_PROMPT },
+          { role: "user", content: `Original lesson plan:\n\n${originalPlan}\n\nGenerate 3 differentiated versions as JSON.` },
+        ],
+        { temperature: 0.5, max_tokens: 4000 }
+      );
 
-      const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "deepseek-ai/deepseek-v3.2",
-          messages: [
-            { role: "system", content: DIFF_SYSTEM_PROMPT },
-            {
-              role: "user",
-              content: `Original lesson plan:\n\n${originalPlan}\n\nGenerate 3 differentiated versions as JSON.`,
-            },
-          ],
-          temperature: 0.5,
-          max_tokens: 4000,
-        }),
-      });
-
-      if (!response.ok) {
-        return NextResponse.json({ error: `OpenAI error ${response.status}` }, { status: 500 });
-      }
-
-      const data = await response.json();
-      const raw = data.choices?.[0]?.message?.content || "";
-
-      // Parse JSON
       try {
         const parsed = JSON.parse(raw);
         return NextResponse.json({ diffVersions: parsed });
       } catch {
-        // Try extracting JSON from text
         const match = raw.match(/\{[\s\S]*\}/);
         if (match) {
           try {
@@ -137,39 +105,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Normal lesson plan generation
-    if (!OPENAI_API_KEY || OPENAI_API_KEY === "sk-build-placeholder") {
-      return NextResponse.json({ error: "OpenAI API key not configured" }, { status: 500 });
-    }
+    const plan = await callMiniMax(
+      [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Generate a complete lesson plan using the 7-phase explicit instruction model:\n\n- Subject: ${subject || "General"}\n- Year Level: ${yearLevel || "Year 4"}\n- Topic/Focus: ${topic || "TBD"}\n- Duration: ${duration || 60} minutes\n- Lesson Type: ${lessonType || "Explicit Teaching"}\n${objectives ? `- Learning Objectives:\n${objectives}` : ""}\n\nRequired: WALT + TIB + WILF in header. Timing for every phase. CFU in every phase. Materials list. Differentiation. Exit ticket. Follow-up prompts.`,
+        },
+      ],
+      { temperature: 0.7, max_tokens: 4000 }
+    );
 
-    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "deepseek-ai/deepseek-v3.2",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content: `Generate a complete lesson plan using the 7-phase explicit instruction model:\n\n- Subject: ${subject || "General"}\n- Year Level: ${yearLevel || "Year 4"}\n- Topic/Focus: ${topic || "TBD"}\n- Duration: ${duration || 60} minutes\n- Lesson Type: ${lessonType || "Explicit Teaching"}\n${objectives ? `- Learning Objectives:\n${objectives}` : ""}\n\nRequired: WALT + TIB + WILF in header. Timing for every phase. CFU in every phase. Materials list. Differentiation. Exit ticket. Follow-up prompts.`,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
-    });
-
-    if (!response.ok) {
-      return NextResponse.json({ error: `OpenAI error ${response.status}` }, { status: 500 });
-    }
-
-    const data = await response.json();
-    const plan = data.choices?.[0]?.message?.content || "";
     return NextResponse.json({ plan });
-
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed" },
+      { status: 500 }
+    );
   }
 }

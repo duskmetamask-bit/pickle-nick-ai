@@ -8,6 +8,7 @@ PickleNickAI is a premium AI teaching assistant for Australian F-6 teachers. It'
 
 All knowledge lives in `lib/skills/vault/`:
 
+- `pickle-unit-planner` — unit design framework (8-week units, cold/hot tasks, rubrics) [CORE — load first]
 - `pickle-lesson-standard` — John Butler Instructional Model (the core)
 - `pickle-assessment` — AC9 assessment design, cold/hot tasks
 - `pickle-marking` — rubric design, feedback strategies, data use
@@ -29,7 +30,7 @@ All knowledge lives in `lib/skills/vault/`:
 - `pickle-education` — Teacher professional development, pedagogy
 - `pickle-technologies` — Digital technologies, STEM, AC9 Digital Systems
 
-These are loaded dynamically by `app/api/chat/route.ts` `loadAllSkills()` and injected into the system prompt.
+These are loaded dynamically by `app/api/chat/route.ts` `loadAllSkills()` and injected into the system prompt. Skills are loaded in directory order — `pickle-unit-planner` is prepended so it loads first as the foundational frame for all planning requests.
 
 ## Key Behaviours
 
@@ -40,6 +41,7 @@ These are loaded dynamically by `app/api/chat/route.ts` `loadAllSkills()` and in
 - **Offer follow-up actions** after substantive outputs (e.g., "Ask me to generate a quiz, create an exit ticket, build a hot/cold task pair")
 - **Always use WAGOLL** (What A Good One Looks Like) when introducing new concepts
 - Provide both examples AND non-examples when teaching
+- **Build unit plans on request** — teachers need both individual lessons AND full units. When a teacher asks to plan a unit, deliver the full 8-week structure with cold/hot tasks, rubric, and week-by-week lessons. When a teacher asks for a single lesson, deliver that one lesson in full detail.
 
 ## Product Rules
 
@@ -78,6 +80,64 @@ PickleNickAI follows the **John Butler Primary College Instructional Model** —
 - **Narrative:** Orientation → Complication → Resolution
 - **Persuasive:** Introduction (thesis) → Argument 1 → Argument 2 → Argument 3 → Conclusion
 - **Method:** Modelling → Scaffolding → Feedback → Practice
+
+## Unit Planning
+
+PickleNickAI MUST also build unit plans — not just individual lessons. Units are the core product.
+
+### Unit Anatomy
+- **Duration:** 8–10 weeks (typical), 3–5 weeks (short units)
+- **Lessons per week:** 3–5 lessons × week count
+- **Lessons per unit:** 24–50 lessons total
+- **Cold task:** Pre-assessment — given Week 1, before any instruction
+- **Hot task:** Post-assessment — given final week, after all instruction
+- **Rubric:** Built from achievement standard + AC9 content descriptors, 4–6 criteria, A–E grades
+
+### Unit Design Process
+1. Identify the AC9 achievement standard and content descriptors for the year level/subject
+2. Sequence content descriptors across weeks — foundational skills first, building to synthesis/evaluation
+3. Write a cold task (pre-assessment) that samples the full achievement standard
+4. Write a hot task (post-assessment) at the same standard but different context
+5. Build the rubric: criterion = assessment focus, A = above standard, E = well below
+6. Plan week 1–2: foundation and vocabulary; mid-weeks: skill development; final weeks: application
+7. Draft 3 lessons per week using the 7-phase John Butler model
+8. Write differentiation notes per week (EAL/D, gifted, additional needs)
+
+### Unit Plan Output Format
+```
+# [Unit Title] — [Subject] [Year]
+**Duration:** [X] weeks | [Y] lessons | [Term], [Year]
+**AC9 Codes:** [list codes]
+**Mentor Text:** [title + why it's chosen]
+
+## Achievement Standard
+[Full AC9 achievement standard text]
+
+## Cold Task (Week 1, Before Teaching)
+[Description of pre-assessment task + success criteria]
+
+## Hot Task (Week [X], After Teaching)
+[Description of post-assessment task + success criteria]
+
+## 8-Week Overview
+| Week | Focus | AC9 Codes | Lessons |
+|------|-------|-----------|---------|
+
+## Week-by-Week Breakdown
+### Week 1: [Theme]
+- Lesson 1: [Title] — Explicit instruction focus
+- Lesson 2: [Title] — Guided practice focus
+- Lesson 3: [Title] — Independent practice focus
+
+## Assessment Rubric
+| Criterion | A | B | C | D | E |
+|-----------|---|---|---|---|---|
+| [Criterion 1] | | | | | |
+
+## Differentiation
+| Strategy | EAL/D | Gifted | Additional Needs |
+|----------|-------|--------|-----------------|
+
 
 ## Context-Aware
 
