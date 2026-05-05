@@ -1,21 +1,7 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 
-const NAV = [
-  { id: "dashboard",    label: "Dashboard",        icon: <IconGrid /> },
-  { id: "chat",         label: "Chat",              icon: <IconChat /> },
-  { id: "differentiate",label: "Differentiate",     icon: <IconDiff /> },
-  { id: "library",      label: "Unit Library",       icon: <IconBook /> },
-  { id: "planner",      label: "Lesson Planner",     icon: <IconCalendar /> },
-  { id: "rubric",       label: "Rubric Generator",   icon: <IconList /> },
-  { id: "automark",     label: "Auto-Marking",       icon: <IconCheck /> },
-  { id: "writing",      label: "Writing Feedback",   icon: <IconPencil /> },
-  { id: "worksheet",    label: "Worksheet Gen",       icon: <IconGrid2 /> },
-  { id: "curriculum",   label: "Curriculum",          icon: <IconBook2 /> },
-  { id: "profile",      label: "My Profile",          icon: <IconUser /> },
-];
-
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ── Icons (must be declared before NAV array to avoid TDZ) ──────────────────
 const IconGrid     = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
 const IconChat     = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
 const IconDiff     = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="8" height="8" rx="1.5"/><rect x="8" y="8" width="8" height="8" rx="1.5" fill="currentColor" fillOpacity="0.15"/><rect x="14" y="14" width="8" height="8" rx="1.5" fill="currentColor" fillOpacity="0.3"/></svg>;
@@ -34,6 +20,21 @@ const IconMoon     = () => <svg width="11" height="11" viewBox="0 0 24 24" fill=
 const IconLogout   = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
 const IconCmd      = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
 
+// ── Navigation (icons declared above to avoid TDZ) ───────────────────────────
+const NAV = [
+  { id: "dashboard",    label: "Dashboard",        icon: <IconGrid /> },
+  { id: "chat",         label: "Chat",              icon: <IconChat /> },
+  { id: "differentiate",label: "Differentiate",     icon: <IconDiff /> },
+  { id: "library",      label: "Unit Library",       icon: <IconBook /> },
+  { id: "planner",      label: "Lesson Planner",     icon: <IconCalendar /> },
+  { id: "rubric",       label: "Rubric Generator",   icon: <IconList /> },
+  { id: "automark",     label: "Auto-Marking",       icon: <IconCheck /> },
+  { id: "writing",      label: "Writing Feedback",   icon: <IconPencil /> },
+  { id: "worksheet",    label: "Worksheet Gen",       icon: <IconGrid2 /> },
+  { id: "curriculum",   label: "Curriculum",          icon: <IconBook2 /> },
+  { id: "profile",      label: "My Profile",          icon: <IconUser /> },
+];
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Props {
   activeTab: string;
@@ -50,7 +51,7 @@ interface Props {
 
 const FREE = 5;
 
-// ── Shared style tokens ──────────────────────────────────────────────────────
+// ── Shared style tokens ────────────────────────────────────────────────────────
 const C = {
   glassBg:   "linear-gradient(180deg, rgba(13,13,22,0.98) 0%, rgba(17,17,28,0.99) 100%)",
   glass:     "blur(24px)",
@@ -63,7 +64,7 @@ const C = {
   inactive:  "transparent",
 };
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function Sidebar({
   activeTab, onTabChange, profile,
   isPro = false, freeUses = 0,
