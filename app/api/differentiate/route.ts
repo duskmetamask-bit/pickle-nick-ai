@@ -68,20 +68,25 @@ Use AC9 codes where relevant. Be specific, practical, and classroom-ready.`;
       { temperature: 0.7, max_tokens: 2000 }
     );
 
+    // Strip thinking tags that MiniMax sometimes prepends
+    const cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
     // Try to parse as JSON
     let result;
     try {
-      result = JSON.parse(text);
+      result = JSON.parse(cleaned);
     } catch {
-      const match = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/\{[\s\S]*\}/);
+      // Try extracting JSON from code blocks or bare object
+      const match = cleaned.match(/```(?:json)?\s*([\s\S]*?)\n```/) ||
+                    cleaned.match(/\{\s*"[\s\S]*"/);
       if (match) {
         try {
           result = JSON.parse(match[1] || match[0]);
         } catch {
-          return NextResponse.json({ error: "Failed to parse differentiation response" }, { status: 500 });
+          return NextResponse.json({ error: "Differentiation response wasn't valid JSON. Please try again." }, { status: 500 });
         }
       } else {
-        return NextResponse.json({ error: "Failed to parse differentiation response" }, { status: 500 });
+        return NextResponse.json({ error: "Differentiation response wasn't valid JSON. Please try again." }, { status: 500 });
       }
     }
 
