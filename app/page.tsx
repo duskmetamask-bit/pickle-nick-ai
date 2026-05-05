@@ -478,7 +478,7 @@ export default function Home() {
             Start free — it&apos;s instant
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </Link>
-          <Link href="/picklenickai#how" style={{
+          <a href="#how" style={{
             padding: "14px 28px",
             background: "var(--surface-2)",
             color: "var(--text-2)", borderRadius: "var(--radius)",
@@ -488,7 +488,7 @@ export default function Home() {
             transition: "all 0.15s",
           }}>
             See how it works
-          </Link>
+          </a>
         </div>
 
         {/* Social proof */}
@@ -568,7 +568,7 @@ export default function Home() {
             <span style={{ fontSize: 13, color: "var(--text-3)" }}>Terms</span>
             <span style={{ fontSize: 13, color: "var(--text-3)" }}>Contact</span>
           </div>
-          <p style={{ fontSize: 12, color: "var(--text-3)" }}>© 2025 PickleNickAI. Built for Australian teachers.</p>
+          <p style={{ fontSize: 12, color: "var(--text-3)" }}>© {new Date().getFullYear()} PickleNickAI. Built for Australian teachers.</p>
         </div>
       </footer>
 
